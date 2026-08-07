@@ -1,0 +1,49 @@
+name: quality-gate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: pnpm --filter @exercise/mobile test
+
+      - name: Lint
+        run: pnpm --filter @exercise/mobile lint
+
+      - name: Typecheck
+        run: pnpm --filter @exercise/mobile typecheck
+
+      - name: Root TypeScript verification
+        run: pnpm exec tsc -p tsconfig.base.json --noEmit
+
+      - name: Formatting check
+        run: pnpm --filter @exercise/mobile format
+
+      - name: Build verification
+        run: CI=1 pnpm --filter @exercise/mobile build
+
+      - name: Dev-client help verification
+        run: pnpm --filter @exercise/mobile start -- --help

@@ -11,5 +11,3 @@ apps/mobile/.expo-shared
 apps/mobile/node_modules
 .agents/
 skills-lock.json
-.agents/
-skills-lock.json
