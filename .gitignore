@@ -1,0 +1,15 @@
+node_modules
+.expo
+.expo-shared
+coverage
+dist
+build
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/.expo
+apps/mobile/.expo-shared
+apps/mobile/node_modules
+.agents/
+skills-lock.json
+.agents/
+skills-lock.json

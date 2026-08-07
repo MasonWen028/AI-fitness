@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Exercise",
+    "slug": "exercise-mobile",
+    "scheme": "exercise",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android"],
+    "plugins": ["expo-dev-client"],
+    "ios": {
+      "bundleIdentifier": "com.exercise.mobile"
+    },
+    "android": {
+      "package": "com.exercise.mobile"
+    }
+  }
+}

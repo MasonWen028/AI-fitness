@@ -1,0 +1,15 @@
+{
+  "name": "@exercise/root",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "lint": "pnpm --filter @exercise/mobile lint",
+    "test": "pnpm --filter @exercise/mobile test",
+    "typecheck": "pnpm --filter @exercise/mobile typecheck",
+    "build": "pnpm --filter @exercise/mobile build",
+    "format": "pnpm --filter @exercise/mobile format"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
