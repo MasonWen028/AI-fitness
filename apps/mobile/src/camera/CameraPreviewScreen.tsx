@@ -1,15 +1,20 @@
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useEffect, useMemo, useReducer } from 'react';
+import { useCameraPermissions } from 'expo-camera';
+import { useEffect, useMemo, useReducer, useState } from 'react';
 import {
   AppState,
   type AppStateStatus,
   Button,
+  Platform,
   SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
+import { PoseCameraView } from '../../modules/pose-camera';
+import type { PoseProviderStatus } from '../pose/poseProviderStatus';
+import { getUnavailablePoseProviderStatus } from '../pose/poseProviderStatus';
+import type { PoseObservation } from '../pose/poseContract';
 import {
   deriveInitialCameraState,
   reduceCameraScreenState,
@@ -30,6 +35,11 @@ export function CameraPreviewScreen({
     undefined,
     deriveInitialCameraState,
   );
+  const [providerStatus, setProviderStatus] = useState<PoseProviderStatus>(
+    getUnavailablePoseProviderStatus(Platform.OS),
+  );
+  const [lastObservation, setLastObservation] =
+    useState<PoseObservation | null>(null);
 
   useEffect(() => {
     dispatch({
@@ -110,19 +120,61 @@ export function CameraPreviewScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.body}>{subtitle}</Text>
         <Text style={styles.status}>{state.statusMessage}</Text>
+        <Text style={styles.providerStatus}>
+          Provider: {providerStatus.providerName} · {providerStatus.delegate} ·{' '}
+          {providerStatus.isAvailable ? 'available' : 'unavailable'}
+        </Text>
+        <Text style={styles.providerDetail}>
+          Model: {providerStatus.modelVersion} · Received:{' '}
+          {providerStatus.health.framesReceived} · Dropped:{' '}
+          {providerStatus.health.framesDropped}
+        </Text>
+        <Text style={styles.providerDetail}>
+          Produced: {providerStatus.health.observationsProduced} · With
+          landmarks: {providerStatus.health.observationsWithLandmarks} ·
+          Without: {providerStatus.health.observationsWithoutLandmarks}
+        </Text>
+        <Text style={styles.providerDetail}>
+          Last sequence: {providerStatus.health.lastSequence} · Last frame:{' '}
+          {providerStatus.health.lastFrameId} · Last ts:{' '}
+          {providerStatus.health.lastTimestampMs}
+        </Text>
+        <Text style={styles.providerDetail}>
+          Inference: {providerStatus.health.lastInferenceMs}ms · Errors:{' '}
+          {providerStatus.health.providerErrors}
+        </Text>
+        {providerStatus.lastError ? (
+          <Text style={styles.providerError}>{providerStatus.lastError}</Text>
+        ) : null}
+        {lastObservation ? (
+          <Text style={styles.providerDetail}>
+            Sequence {lastObservation.sequence} · Landmarks:{' '}
+            {lastObservation.landmarksAvailable ? 'available' : 'unavailable'} ·
+            Count: {lastObservation.landmarkCount}
+          </Text>
+        ) : null}
       </View>
 
       {showPreview ? (
         <View style={styles.previewShell}>
-          <CameraView
+          <PoseCameraView
+            active
+            delegate="CPU"
             facing="back"
-            mode="picture"
+            mirrored={false}
+            modelAssetPath="pose_landmarker_lite.task"
             style={styles.preview}
-            onMountError={() => {
-              dispatch({
-                type: 'camera_interrupted',
-                reason: 'mount_error',
-              });
+            onProviderStatus={(event) => {
+              setProviderStatus(event.nativeEvent);
+            }}
+            onPoseObservation={(event) => {
+              setLastObservation(event.nativeEvent);
+            }}
+            onProviderError={(event) => {
+              setProviderStatus((current) => ({
+                ...current,
+                lastError: event.nativeEvent.message,
+              }));
             }}
           />
         </View>
@@ -130,8 +182,8 @@ export function CameraPreviewScreen({
         <View style={styles.placeholderShell}>
           <Text style={styles.placeholderTitle}>Camera preview inactive</Text>
           <Text style={styles.placeholderBody}>
-            M0-B validates permission, lifecycle, interruption handling, and
-            preview gating only.
+            M0-C wires a native pose provider boundary, provider metadata, and
+            health status into the existing preview shell.
           </Text>
         </View>
       )}
@@ -168,6 +220,21 @@ const styles = StyleSheet.create({
   status: {
     color: '#93c5fd',
     fontSize: 14,
+    textAlign: 'center',
+  },
+  providerStatus: {
+    color: '#e2e8f0',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  providerDetail: {
+    color: '#94a3b8',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  providerError: {
+    color: '#fca5a5',
+    fontSize: 12,
     textAlign: 'center',
   },
   previewShell: {
