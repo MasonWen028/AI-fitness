@@ -6,7 +6,17 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "platforms": ["ios", "android"],
-    "plugins": ["expo-dev-client"],
+    "plugins": [
+      "expo-dev-client",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Exercise to access your camera",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
+        }
+      ]
+    ],
     "ios": {
       "bundleIdentifier": "com.exercise.mobile"
     },
