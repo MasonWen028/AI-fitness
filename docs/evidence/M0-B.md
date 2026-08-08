@@ -13,6 +13,7 @@ M0-B implements only the approved Camera Pipeline scope:
 - interruption handling for app backgrounding and camera mount failure
 - manual fallback routing when camera access is unavailable or interrupted
 - bounded camera state transitions that do not start pose/provider logic
+- lifecycle-aware permission snapshots that do not overwrite `manual_fallback` or `preview_interrupted`
 
 ### Files changed
 
@@ -38,7 +39,7 @@ Frozen-lockfile install succeeds from the final repository state.
 `pnpm --filter @exercise/mobile test`
 
 Result:
-All shell and camera state reducer tests passed (`10` tests total).
+All shell and camera state reducer tests passed (`13` tests total).
 
 #### PASS
 
@@ -126,15 +127,25 @@ Verified:
 - no microphone-specific runtime functionality
 - no scope leakage into M0-C or later packages
 
+## Scenario Outcomes
+
+- `manual_fallback + permission_snapshot(granted) → manual_fallback`
+- `preview_interrupted + permission_snapshot(granted) → preview_interrupted`
+- `preview_active + permission_snapshot(denied/canAskAgain=true) → ready_to_setup`
+- `preview_active + permission_snapshot(denied/canAskAgain=false) → permission_denied`
+- `ready_to_setup + permission_snapshot(granted) → ready_to_setup`
+
+No passive permission update can re-enter preview or erase an explicit fallback/interruption decision.
+
 ## Remediation Review
 
 | Severity | Finding | Resolution | Evidence |
 | --- | --- | --- | --- |
 | BLOCKER | Evidence file was stale and marked executed commands as `NOT VERIFIED` | Rewrote the evidence file from the final repository state using actual command results only. | This file and the command results listed above |
 | HIGH | Formatting gate failed | Formatted the new camera files and reran the repository formatting check successfully. | `pnpm --filter @exercise/mobile format` |
+| HIGH | Passive permission snapshots could overwrite later lifecycle decisions | Made `permission_snapshot` lifecycle-aware so explicit `manual_fallback` and `preview_interrupted` states are preserved under repeated granted snapshots. | `apps/mobile/src/camera/cameraState.ts`, `apps/mobile/src/camera/cameraState.test.ts` |
 | MEDIUM | Unnecessary microphone permission configuration | Removed microphone permission text from `app.json`; M0-B now requests only camera-related permission config. | `apps/mobile/app.json` |
-| MEDIUM | Preview mounted automatically after permission grant | Restored explicit setup gating so permission grant leads to `ready_to_setup` and preview mounts only after an explicit `start_preview` action. | `apps/mobile/src/camera/cameraState.ts`, `apps/mobile/src/camera/cameraState.test.ts`, `apps/mobile/src/camera/CameraPreviewScreen.tsx` |
-| LOW | Camera reducer/test coverage did not prove explicit setup gating | Added reducer coverage showing `ready_to_setup` does not imply preview mount and requires explicit preview start. | `apps/mobile/src/camera/cameraState.test.ts` |
+| MEDIUM | Preview mounted automatically after permission grant | Restored explicit setup gating so permission grant leads to `ready_to_setup` and preview mounts only after an explicit `start_preview` action. | `apps/mobile/src/camera/CameraPreviewScreen.tsx`, `apps/mobile/src/camera/cameraState.ts`, `apps/mobile/src/camera/cameraState.test.ts` |
 
 ## Remaining Risks
 
