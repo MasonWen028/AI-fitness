@@ -1,0 +1,298 @@
+{
+  "runId": "ai-fitness-ds-2026-08-08",
+  "fileKey": "YjKfAowet2M4zdzQds8jEH",
+  "fileUrl": "https://www.figma.com/design/YjKfAowet2M4zdzQds8jEH",
+  "phase": "phase-1",
+  "step": "P1.safe-checkpoint-paused",
+  "checkpointStatus": "DESIGN FOUNDATION — PAUSED AT SAFE FIGMA CHECKPOINT",
+  "overallDesignFoundationStatus": "IN PROGRESS",
+  "entities": {
+    "collections": {
+      "primitives": "VariableCollectionId:7:2",
+      "colorLight": "VariableCollectionId:7:3",
+      "colorDark": "VariableCollectionId:7:4"
+    },
+    "variables": {
+      "primitives/neutral/0": "VariableID:8:2",
+      "primitives/neutral/50": "VariableID:8:3",
+      "primitives/neutral/100": "VariableID:8:4",
+      "primitives/neutral/200": "VariableID:8:5",
+      "primitives/neutral/300": "VariableID:8:6",
+      "primitives/neutral/400": "VariableID:8:7",
+      "primitives/neutral/450": "VariableID:8:8"
+      ,"primitives/neutral/500": "VariableID:8:9"
+      ,"primitives/neutral/550": "VariableID:8:10"
+      ,"primitives/neutral/600": "VariableID:8:11"
+      ,"primitives/neutral/700": "VariableID:8:12"
+      ,"primitives/neutral/800": "VariableID:8:13"
+      ,"primitives/neutral/900": "VariableID:8:14"
+      ,"primitives/neutral/950": "VariableID:8:15"
+      ,"primitives/cadence/50": "VariableID:8:16"
+      ,"primitives/cadence/100": "VariableID:8:17"
+      ,"primitives/cadence/200": "VariableID:8:18"
+      ,"primitives/cadence/300": "VariableID:8:19"
+      ,"primitives/cadence/400": "VariableID:8:20"
+      ,"primitives/cadence/500": "VariableID:8:21"
+      ,"primitives/cadence/600": "VariableID:8:22"
+      ,"primitives/cadence/700": "VariableID:8:23"
+      ,"primitives/cadence/800": "VariableID:8:24"
+      ,"primitives/cadence/900": "VariableID:8:25"
+      ,"primitives/cadence/950": "VariableID:8:26"
+      ,"primitives/pulse/50": "VariableID:8:27"
+      ,"primitives/pulse/100": "VariableID:8:28"
+      ,"primitives/pulse/200": "VariableID:8:29"
+      ,"primitives/pulse/300": "VariableID:8:30"
+      ,"primitives/pulse/400": "VariableID:8:31"
+      ,"primitives/pulse/500": "VariableID:8:32"
+      ,"primitives/pulse/600": "VariableID:8:33"
+      ,"primitives/pulse/700": "VariableID:8:34"
+      ,"primitives/pulse/800": "VariableID:8:35"
+      ,"primitives/pulse/900": "VariableID:8:36"
+      ,"primitives/pulse/950": "VariableID:8:37"
+      ,"primitives/green/50": "VariableID:8:38"
+      ,"primitives/green/300": "VariableID:8:39"
+      ,"primitives/green/600": "VariableID:8:40"
+      ,"primitives/green/900": "VariableID:8:41"
+      ,"primitives/amber/50": "VariableID:8:42"
+      ,"primitives/amber/300": "VariableID:8:43"
+      ,"primitives/amber/600": "VariableID:8:44"
+      ,"primitives/amber/700": "VariableID:8:45"
+      ,"primitives/amber/900": "VariableID:8:46"
+      ,"primitives/red/50": "VariableID:8:47"
+      ,"primitives/red/300": "VariableID:8:48"
+      ,"primitives/red/600": "VariableID:8:49"
+      ,"primitives/red/700": "VariableID:8:50"
+      ,"primitives/red/900": "VariableID:8:51"
+      ,"primitives/blue/50": "VariableID:8:52"
+      ,"primitives/blue/300": "VariableID:8:53"
+      ,"primitives/blue/600": "VariableID:8:54"
+      ,"primitives/blue/700": "VariableID:8:55"
+      ,"primitives/blue/900": "VariableID:8:56"
+      ,"primitives/overlay/ink-72": "VariableID:8:57"
+      ,"primitives/overlay/white-12": "VariableID:8:58"
+      ,"light/background/base": "VariableID:11:2"
+      ,"dark/background/base": "VariableID:11:3"
+      ,"light/background/sunken": "VariableID:11:4"
+      ,"dark/background/sunken": "VariableID:11:5"
+      ,"light/background/elevated": "VariableID:11:6"
+      ,"dark/background/elevated": "VariableID:11:7"
+      ,"light/surface/default": "VariableID:11:8"
+      ,"dark/surface/default": "VariableID:11:9"
+      ,"light/surface/raised": "VariableID:11:10"
+      ,"dark/surface/raised": "VariableID:11:11"
+    },
+    "textStyles": {},
+    "effectStyles": {},
+    "pages": {},
+    "components": {}
+  },
+  "completedSteps": [
+    "phase-0",
+    "P1.a-starter-limitation-documented",
+    "P1.b-three-color-collections-created",
+    "P1.b-57-primitives-created",
+    "P1.b-five-paired-semantic-roles-created",
+    "specification-design-system-complete",
+    "specification-semantic-color-contract-complete",
+    "specification-foundation-token-contract-complete",
+    "specification-component-architecture-complete",
+    "validation-design-contract-and-40-wcag-cases-passed"
+  ],
+  "pendingValidations": [
+    "PENDING FIGMA CONSTRUCTION — reconcile live Figma inventory against this ledger when the allowance is available",
+    "PENDING FIGMA CONSTRUCTION — validate all completed Light/Dark semantic aliases, scopes, and code syntax after the remaining variables are created",
+    "PENDING FIGMA CONSTRUCTION — run visual accessibility, cross-platform consistency, and adversarial UX reviews after components and screens exist"
+  ],
+  "completedSpecificationWork": {
+    "status": "COMPLETE FOR THIS RESUMABLE CHECKPOINT",
+    "authoritativeFiles": [
+      "docs/design/design-system-spec.md",
+      "docs/design/semantic-color-contract.json",
+      "docs/design/foundation-token-contract.json",
+      "docs/design/component-architecture.md",
+      "docs/design/figma-state.json"
+    ],
+    "validator": "docs/design/validate-design-contract.mjs",
+    "validationResult": "PASS — 55 deterministic semantic roles, 57 primitives, 40 reproducible Light/Dark WCAG cases",
+    "sha256": {
+      "docs/design/design-system-spec.md": "39ce641afd1bb1bccf7ac4e2efbfec3dbce70627d3fc4384328c2ee4f0391473",
+      "docs/design/semantic-color-contract.json": "4ac291a8013c21245f74326577d65142e3f94fa4fa7a819a214ef00361e7c60e",
+      "docs/design/foundation-token-contract.json": "97e3f9e7600da5a313fad507a8011ded1649a3e0a22e3de2110dfcf63593fc62",
+      "docs/design/component-architecture.md": "0e6d4615b45bc1fd13c8e5d4a5d412a3d11dc22f9e8f3a84c9b4ae5864af35e1",
+      "docs/design/validate-design-contract.mjs": "20425f23178afdf2ff9a7cba3d88f165741ed42053f3fd2da489106dd01f8f8b"
+    }
+  },
+  "checkpointIntegrityReview": {
+    "reviewedOn": "2026-08-08",
+    "status": "PASS",
+    "checks": {
+      "figmaObjectLedgerCoverage": "PASS — 3 created collections and 67 created variables are represented by unique IDs; no workflow-created canvas nodes, components, text styles, or effect styles exist",
+      "completedSemanticParity": "PASS — Light and Dark each contain the same five names and hierarchy",
+      "failedCallIntegrity": "PASS — failed writes were atomic; follow-up inspections confirmed no partial collection or primitive batch, and the call-limit rejection occurred before execution",
+      "canonicalContract": "PASS — 55 unique semantic names, no missing primitive aliases, no prohibited theme-specific names",
+      "wcagReproducibility": "PASS — validator reproduces 20 cases per theme, 40 total",
+      "unfinishedWorkLabeling": "PASS — all remaining visual construction is listed below as PENDING FIGMA CONSTRUCTION",
+      "specificationCompletion": "PASS — completed repository specification work is recorded separately from pending Figma representation",
+      "m0bIsolation": "PASS — the design worktree contains no M0-B production modifications",
+      "gitScope": "PASS — expected changes are limited to docs/design and the design-foundation plan"
+    },
+    "evidenceBoundary": "No live Figma re-inspection was attempted after the allowance rejection. Coverage is reconciled from successful Figma return IDs, atomic-failure confirmations, this ledger, and the canonical contracts. A live read-only reconciliation is the first safe resume action.",
+    "gitSnapshot": {
+      "designBranch": "codex/design-foundation",
+      "baseline": "8051c156c5810ac52da197102af3a8d7dd46da75",
+      "trackedChanges": 0,
+      "expectedUntrackedArtifacts": 9,
+      "unexpectedArtifacts": 0,
+      "productionPathChangesInDesignWorktree": 0,
+      "activeM0BCheckoutReadOnlyObservation": {
+        "branch": "feature/m0-b-camera-pipeline",
+        "modifiedPaths": [
+          "apps/mobile/src/camera/cameraState.test.ts",
+          "apps/mobile/src/camera/cameraState.ts",
+          "docs/evidence/M0-B.md"
+        ],
+        "ownership": "Parallel Kiro/M0-B work; not modified by this design workflow"
+      }
+    }
+  },
+  "resume": {
+    "lastSuccessfullyCreatedFigmaObject": {
+      "type": "VARIABLE",
+      "collection": "Color — Dark",
+      "semanticName": "surface/raised",
+      "ledgerKey": "dark/surface/raised",
+      "id": "VariableID:11:11"
+    },
+    "preexistingFigmaState": {
+      "defaultPage": {
+        "name": "Page 1",
+        "id": "0:1",
+        "createdByThisWorkflow": false,
+        "knownChildCountAtLastInspection": 0
+      }
+    },
+    "completedCollections": [
+      {"name":"Primitives","id":"VariableCollectionId:7:2","mode":"Value","variableCount":57},
+      {"name":"Color — Light","id":"VariableCollectionId:7:3","mode":"Light","variableCount":5},
+      {"name":"Color — Dark","id":"VariableCollectionId:7:4","mode":"Dark","variableCount":5}
+    ],
+    "completedSemanticTokens": [
+      "background/base",
+      "background/sunken",
+      "background/elevated",
+      "surface/default",
+      "surface/raised"
+    ],
+    "nextSemanticTokenToCreate": "surface/interactive",
+    "remainingTokenCount": {
+      "semanticRoles": 50,
+      "semanticVariablesAcrossPairedCollections": 100,
+      "dimensionVariables": 38,
+      "motionVariables": 7,
+      "textStyles": 22,
+      "effectStyles": 3
+    },
+    "pendingComponentFamilies": [
+      "Private icon primitives and progress indicator",
+      "Action Button",
+      "Field",
+      "Navigation Item",
+      "Metric",
+      "Status / Sync Badge",
+      "Workout Control",
+      "State Panel",
+      "Camera Setup Status — M0-B design guidance only"
+    ],
+    "pendingRepresentativeScreens": {
+      "web": [
+        "Sign in — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Today — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Explore — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Workout builder — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "History detail — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+      ],
+      "h5": [
+        "Today — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Exercise guidance — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Manual active set — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Set result with offline/sync state — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+      ],
+      "mobileShared": [
+        "Camera permission/setup state matrix — M0-B design guidance only",
+        "Camera preview active — M0-B design guidance only",
+        "Camera interrupted/manual fallback — M0-B design guidance only",
+        "Today — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Exercise guidance — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Active Form Check — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Set result — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+      ],
+      "admin": [
+        "Exercise catalogue/content table — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+        "Profile/rule publication review — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+      ],
+      "futureAiTransparency": [
+        "Optional M2 post-workout generated summary with deterministic fallback — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+      ]
+    },
+    "pendingPlatformVariants": [
+      "iOS — SF system typography, safe areas, native tab/sidebar, sheet, keyboard, and gesture behavior",
+      "Android — native system typography, edge-to-edge bars, adaptive navigation, system back, ripple, and native controls",
+      "Web — responsive navigation, hover/focus, keyboard order, dialogs, and system typography",
+      "H5 — compact responsive layout with browser-safe capabilities and no implied native camera behavior",
+      "Admin — dense sidebar/table patterns, visible focus, keyboard operation, and least-privilege context"
+    ],
+    "pendingRepresentativeFlowsAndPrototypes": [
+      "Workout execution and local completion/sync flow — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+      "Camera permission, preview lifecycle, interruption, and manual fallback flow — M0-B design guidance only",
+      "Offline and sync-pending recovery flow — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
+      "Optional AI-transparency flow — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+    ],
+    "pendingAccessibilityAndConsistencyReview": [
+      "Accessibility review of constructed components, screens, focus order, scaling, targets, status cues, and motion",
+      "Cross-platform consistency review of shared semantics versus intentional native behavior",
+      "Adversarial UX review covering denial, interruption, offline, stale/sync conflict, extreme text, keyboard, and misleading AI/camera expectations"
+    ],
+    "knownFigmaStarterLimitations": [
+      "One variable mode per collection; approved workaround is paired one-mode Color — Light and Color — Dark collections generated from one contract",
+      "Starter-plan MCP call allowance currently rejects further Figma calls",
+      "The paired-collection workaround is not the production theme architecture",
+      "Do not bypass the allowance and do not request an upgrade"
+    ],
+    "safeResumeProcedure": [
+      "Wait until the Figma MCP allowance is available; do not bypass it and do not request an upgrade.",
+      "Read all five authoritative specification files and this resume section before any Figma call.",
+      "Run node docs/design/validate-design-contract.mjs and require PASS.",
+      "Inspect the existing Figma file read-only: pages, all local collections, every variable with collection/name/ID/value alias/scopes/code syntax, styles, and components.",
+      "Reconcile the live inventory against exact ledger IDs. Require the three collections, 57 primitives, five Light roles, five Dark roles, zero workflow-created components/styles, and the blank preexisting Page 1 state unless a legitimate external edit is identified.",
+      "If any discrepancy, duplicate, or unexpected object exists, stop and reconcile by exact ID. Do not delete or reconstruct by name or prefix.",
+      "Compute missing semantic names independently for Color — Light and Color — Dark from semantic-color-contract.json; require both missing-name sets to be identical.",
+      "Continue only the missing paired roles, starting with surface/interactive. Generate both collection variables from the same ordered contract entries and record every returned ID immediately.",
+      "After all 55 roles exist in both collections, validate exact name parity, primitive aliases, explicit scopes, identical platform code syntax, unique IDs, and all 40 WCAG cases.",
+      "Then construct remaining foundations, components, states, platform variants, screens, flows, and reviews in the approved continuation order. Production UI remains blocked."
+    ]
+  },
+  "pendingFigmaConstruction": {
+    "status": "PENDING FIGMA CONSTRUCTION",
+    "continuationOrder": [
+      "Complete semantic color variables",
+      "Complete remaining foundation representation",
+      "Construct core components",
+      "Construct component states/variants",
+      "Add platform-specific variants",
+      "Build representative screens",
+      "Build representative flows/prototypes",
+      "Perform accessibility review",
+      "Perform cross-platform consistency review",
+      "Perform adversarial UX review"
+    ]
+  },
+  "notes": [
+    "Phase 0 approved on 2026-08-08.",
+    "Production UI implementation is blocked until M0-B is closed and this branch is rebased.",
+    "The Starter plan rejected a second Color mode with: Limited to 1 modes only.",
+    "The failed operation was atomic; a follow-up inspection confirmed zero local collections and no partial Color collection.",
+    "User approved the paired one-mode fallback on 2026-08-08; it is tooling-only and must not be copied into production architecture.",
+    "Figma rejected the next semantic-token write before execution with a separate Starter-plan MCP call-limit paywall. Authenticated plan remains Full seat on tier starter.",
+    "Created successfully before the call limit: three one-mode collections, 57 primitive variables, and five paired semantic roles (10 semantic variables)."
+  ]
+}
