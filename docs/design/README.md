@@ -1,6 +1,6 @@
 # AI Fitness Design Foundation
 
-This directory is the approved home for design discovery, specifications, decisions, and implementation guidance while M0-B is active on a separate branch.
+This directory is the approved home for design discovery, specifications, decisions, and implementation guidance. M0-B is merged into stable `main`; the independent M0-C workstream remains outside this design branch.
 
 **Checkpoint:** `DESIGN FOUNDATION — PAUSED AT SAFE FIGMA CHECKPOINT`. Repository contracts are complete for the current checkpoint; the overall design foundation remains in progress and unfinished visual work is `PENDING FIGMA CONSTRUCTION`.
 
@@ -30,6 +30,6 @@ This is not the production theme architecture. Production remains:
 
 ## Implementation gate
 
-Production UI implementation remains blocked until M0-B is closed, `codex/design-foundation` is rebased onto the latest stable branch, conflicts are reviewed, and the relevant future milestone is active.
+The M0-B closure and stable-main synchronization prerequisites are satisfied. Production UI implementation remains blocked until the design foundation passes its accessibility, cross-platform consistency, and adversarial UX review gate and an implementation milestone is explicitly authorized.
 
-All post-M0-B behavior remains **FUTURE IMPLEMENTATION — OUTSIDE M0-B**.
+Any design exploration that depends on M0-C remains **FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE**. Do not checkout, modify, cherry-pick, or depend on the active M0-C branch from this workstream.

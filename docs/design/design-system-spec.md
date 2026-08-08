@@ -4,7 +4,22 @@
 **Status:** Successful resumable specification checkpoint; overall design foundation remains in progress
 **Design branch:** `codex/design-foundation`
 **Figma:** [AI Fitness — Product Design System](https://www.figma.com/design/YjKfAowet2M4zdzQds8jEH)
-**Implementation gate:** Production UI work is blocked until M0-B closes and this branch is rebased onto the latest stable branch.
+**Stable baseline:** `origin/main` at `0a425b25e8f1c124d4b89964ac722a7c3ca37cb7`, including merged M0-B and the prior design checkpoint
+**Implementation gate:** The M0-B closure/synchronization prerequisite is satisfied. Production UI work remains blocked until the design foundation passes its own review gate and an implementation milestone is explicitly authorized.
+
+## Stable-baseline reconciliation
+
+### M0-B IMPLEMENTED BEHAVIOUR
+
+M0-B establishes a tested camera lifecycle reducer and technical mobile shell: passive permission updates do not mount the preview, setup/start is explicit, active preview interruption is preserved, permission revocation unmounts preview, and manual fallback remains available. The merged implementation is intentionally milestone-scoped; its hard-coded dark UI, native default controls, technical copy, generic camera-purpose string, and action presentation are not design tokens or reusable component precedent.
+
+Physical-device behavior remains unverified in the M0-B evidence for system prompts, blocked permissions, live preview, background interruption, mount failure, and iOS native execution.
+
+### DESIGN RECOMMENDATION FOR FUTURE IMPLEMENTATION
+
+**FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE.** Product UI should preserve the explicit setup and fallback invariants while adding contextual camera-purpose explanation, deliberate primary/secondary action hierarchy, distinct requesting/denied/restricted/revoked/unavailable presentations, accessible status announcements, platform-appropriate recovery, and product-language copy. No production UI changes are authorized by this specification update.
+
+M0-C is isolated from this workstream. Design exploration that depends on M0-C behavior must be labeled **FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE** and cannot be treated as stable implementation evidence.
 
 ## Architecture
 
@@ -170,7 +185,7 @@ Dark elevation uses surface tone and border first. Shadows never carry the only 
 
 ## Core component contract
 
-All component implementation is **FUTURE IMPLEMENTATION — OUTSIDE M0-B** unless explicitly identified as M0-B design guidance. Figma components must bind to semantic color roles and dimension variables, not primitive colors or raw values.
+All new component implementation is **FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE** unless a section explicitly records merged M0-B behavior. Figma components must bind to semantic color roles and dimension variables, not primitive colors or raw values.
 
 | Component | Required states/API | Accessibility and platform behavior |
 | --- | --- | --- |
@@ -181,7 +196,7 @@ All component implementation is **FUTURE IMPLEMENTATION — OUTSIDE M0-B** unles
 | Status / Sync Badge | Neutral, success, warning, error, info; compact/regular | Icon plus short label; screen-reader status wording; sync states distinguish queued, syncing, failed, and complete |
 | Workout Control | Primary, pause, resume, rest, stop; default, pressed, disabled | Oversized targets, coaching-distance legibility, explicit action text, haptic/visual response per native platform |
 | State Panel | Loading, empty, offline, error, success, sync-pending | Title, explanation, optional action; offline and sync-pending remain distinct; progress is announced without continuous chatter |
-| Camera Setup Status | Permission loading/request/denied/restricted, setup ready, preview inactive/active, interrupted, manual fallback | **M0-B DESIGN GUIDANCE ONLY.** Preserves the set and exposes manual fallback; camera purpose and current state are explicit |
+| Camera Setup Status | Permission loading/required/requesting/denied/restricted, setup ready, preview inactive/active, interrupted/unavailable, manual fallback | M0-B supplies lifecycle evidence only. Future product design preserves explicit setup and fallback while adding truthful recovery, camera purpose, accessible state, and intentional action hierarchy |
 
 Variant matrices must remain below 30 combinations. Platform-only interactions such as hover must not be forced into native-mobile variants; native sheets, dialogs, gestures, keyboard behavior, and controls remain platform-specific.
 
@@ -200,4 +215,6 @@ Variant matrices must remain below 30 combinations. Platform-only interactions s
 - Preserve identical semantic names across Web, H5, React Native, and Admin even where platform components differ.
 - Require automated contrast tests for the pairs listed above and token-parity tests between theme objects.
 - Require state tests that verify icon/text/shape cues exist where color conveys status or selection.
-- Rebase this design branch only after M0-B closes; then review token mappings against the stable implementation before any production UI mutation.
+- M0-B is closed and this design branch has been fast-forwarded to the fetched stable `origin/main`; preserve that ancestry in later design commits.
+- Do not inspect, modify, checkout, cherry-pick, or depend on M0-C work. Reconcile only against stable `main` until M0-C is merged and explicitly brought into scope.
+- Production UI mutation still requires the design foundation review gate and explicit implementation authorization.

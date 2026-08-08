@@ -3,7 +3,7 @@
   "fileKey": "YjKfAowet2M4zdzQds8jEH",
   "fileUrl": "https://www.figma.com/design/YjKfAowet2M4zdzQds8jEH",
   "phase": "phase-1",
-  "step": "P1.safe-checkpoint-paused",
+  "step": "P1.read-only-reconciliation-blocked-by-starter-allowance",
   "checkpointStatus": "DESIGN FOUNDATION — PAUSED AT SAFE FIGMA CHECKPOINT",
   "overallDesignFoundationStatus": "IN PROGRESS",
   "entities": {
@@ -115,10 +115,10 @@
     "validator": "docs/design/validate-design-contract.mjs",
     "validationResult": "PASS — 55 deterministic semantic roles, 57 primitives, 40 reproducible Light/Dark WCAG cases",
     "sha256": {
-      "docs/design/design-system-spec.md": "39ce641afd1bb1bccf7ac4e2efbfec3dbce70627d3fc4384328c2ee4f0391473",
+      "docs/design/design-system-spec.md": "c55cb9903f231b346fc36d69e1a2b08f55fd5d3eb7f83609e1818ca5eede88cf",
       "docs/design/semantic-color-contract.json": "4ac291a8013c21245f74326577d65142e3f94fa4fa7a819a214ef00361e7c60e",
       "docs/design/foundation-token-contract.json": "97e3f9e7600da5a313fad507a8011ded1649a3e0a22e3de2110dfcf63593fc62",
-      "docs/design/component-architecture.md": "0e6d4615b45bc1fd13c8e5d4a5d412a3d11dc22f9e8f3a84c9b4ae5864af35e1",
+      "docs/design/component-architecture.md": "94bd2fd111537d276c2a7213f8b37f30c9201d0ced6c1a398809a2bf8aa9c861",
       "docs/design/validate-design-contract.mjs": "20425f23178afdf2ff9a7cba3d88f165741ed42053f3fd2da489106dd01f8f8b"
     }
   },
@@ -154,6 +154,33 @@
         "ownership": "Parallel Kiro/M0-B work; not modified by this design workflow"
       }
     }
+  },
+  "repositorySynchronization": {
+    "reviewedOn": "2026-08-08",
+    "designBranch": "codex/design-foundation",
+    "preservedCheckpointCommit": "f0e829308838f484fb9d905678f691cf70b4a210",
+    "method": "git fetch origin --prune, then git merge --ff-only origin/main in the isolated design worktree",
+    "stableMainCommit": "0a425b25e8f1c124d4b89964ac722a7c3ca37cb7",
+    "mergedM0BCommit": "6a82c08180dd78e0a1db244f76d7df9671682c49",
+    "result": "PASS — the design branch fast-forwarded without conflicts; both the M0-B merge and prior design checkpoint are ancestors of HEAD",
+    "productionFilesModifiedByDesignReconciliation": 0,
+    "m0CIsolation": "PASS — the active M0-C workstream was not checked out, modified, cherry-picked, or used as a dependency; stable origin/main is the only implementation baseline"
+  },
+  "latestFigmaReconciliationAttempt": {
+    "attemptedOn": "2026-08-08",
+    "intent": "Read-only inventory of pages, local variable collections, variables, aliases, scopes, code syntax, styles, and current-page components before any write",
+    "status": "BLOCKED — NOT RECONCILED",
+    "execution": "REJECTED BEFORE EXECUTION — Figma reported the Starter-plan MCP tool call limit",
+    "figmaMutationOccurred": false,
+    "authenticatedPlan": {
+      "team": "qi wen's team",
+      "seat": "Full",
+      "tier": "starter"
+    },
+    "verifiedLiveInventory": null,
+    "ledgerExpectedResumePoint": "surface/interactive",
+    "resumeAuthorization": "NOT GRANTED — live read-only reconciliation must pass before surface/interactive or any other Figma write",
+    "retryPolicy": "Do not retry in this session, bypass the allowance, or request an upgrade"
   },
   "resume": {
     "lastSuccessfullyCreatedFigmaObject": {
@@ -201,37 +228,37 @@
       "Status / Sync Badge",
       "Workout Control",
       "State Panel",
-      "Camera Setup Status — M0-B design guidance only"
+      "Camera Setup Status — DESIGN RECOMMENDATION FOR FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE"
     ],
     "pendingRepresentativeScreens": {
       "web": [
-        "Sign in — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Today — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Explore — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Workout builder — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "History detail — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+        "Sign in — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Today — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Explore — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Workout builder — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "History detail — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE"
       ],
       "h5": [
-        "Today — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Exercise guidance — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Manual active set — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Set result with offline/sync state — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+        "Today — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Exercise guidance — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Manual active set — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Set result with offline/sync state — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE"
       ],
       "mobileShared": [
-        "Camera permission/setup state matrix — M0-B design guidance only",
-        "Camera preview active — M0-B design guidance only",
-        "Camera interrupted/manual fallback — M0-B design guidance only",
-        "Today — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Exercise guidance — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Active Form Check — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Set result — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+        "Camera permission/setup state matrix — DESIGN RECOMMENDATION FOR FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Camera preview active — DESIGN RECOMMENDATION FOR FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Camera interrupted/manual fallback — DESIGN RECOMMENDATION FOR FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Today — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Exercise guidance — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Active Form Check — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Set result — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE"
       ],
       "admin": [
-        "Exercise catalogue/content table — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-        "Profile/rule publication review — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+        "Exercise catalogue/content table — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+        "Profile/rule publication review — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE"
       ],
       "futureAiTransparency": [
-        "Optional M2 post-workout generated summary with deterministic fallback — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+        "Optional M2 post-workout generated summary with deterministic fallback — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE"
       ]
     },
     "pendingPlatformVariants": [
@@ -242,10 +269,10 @@
       "Admin — dense sidebar/table patterns, visible focus, keyboard operation, and least-privilege context"
     ],
     "pendingRepresentativeFlowsAndPrototypes": [
-      "Workout execution and local completion/sync flow — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-      "Camera permission, preview lifecycle, interruption, and manual fallback flow — M0-B design guidance only",
-      "Offline and sync-pending recovery flow — FUTURE IMPLEMENTATION — OUTSIDE M0-B",
-      "Optional AI-transparency flow — FUTURE IMPLEMENTATION — OUTSIDE M0-B"
+      "Workout execution and local completion/sync flow — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+      "Camera permission, preview lifecycle, interruption, and manual fallback flow — DESIGN RECOMMENDATION FOR FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+      "Offline and sync-pending recovery flow — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE",
+      "Optional AI-transparency flow — FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE"
     ],
     "pendingAccessibilityAndConsistencyReview": [
       "Accessibility review of constructed components, screens, focus order, scaling, targets, status cues, and motion",
@@ -268,7 +295,7 @@
       "Compute missing semantic names independently for Color — Light and Color — Dark from semantic-color-contract.json; require both missing-name sets to be identical.",
       "Continue only the missing paired roles, starting with surface/interactive. Generate both collection variables from the same ordered contract entries and record every returned ID immediately.",
       "After all 55 roles exist in both collections, validate exact name parity, primitive aliases, explicit scopes, identical platform code syntax, unique IDs, and all 40 WCAG cases.",
-      "Then construct remaining foundations, components, states, platform variants, screens, flows, and reviews in the approved continuation order. Production UI remains blocked."
+      "Then construct remaining foundations, components, states, platform variants, screens, flows, and reviews in the approved continuation order. Production UI remains blocked by the design review gate and explicit milestone authorization."
     ]
   },
   "pendingFigmaConstruction": {
@@ -288,7 +315,10 @@
   },
   "notes": [
     "Phase 0 approved on 2026-08-08.",
-    "Production UI implementation is blocked until M0-B is closed and this branch is rebased.",
+    "M0-B is closed and merged; the isolated design branch fast-forwarded to fetched stable origin/main while preserving the prior checkpoint.",
+    "Production UI implementation remains blocked by the design foundation review gate and explicit milestone authorization.",
+    "M0-C remains isolated; any M0-C-dependent design exploration is FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE.",
+    "The 2026-08-08 live read-only reconciliation attempt was rejected before execution by the Starter-plan MCP call limit; the Figma file therefore remains unverified against this ledger and no Figma mutation occurred.",
     "The Starter plan rejected a second Color mode with: Limited to 1 modes only.",
     "The failed operation was atomic; a follow-up inspection confirmed zero local collections and no partial Color collection.",
     "User approved the paired one-mode fallback on 2026-08-08; it is tooling-only and must not be copied into production architecture.",

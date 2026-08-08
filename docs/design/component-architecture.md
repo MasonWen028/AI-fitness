@@ -1,7 +1,7 @@
 # AI Fitness Core Component Architecture
 
 **Status:** Component contract approved for Figma construction after foundation validation
-**Implementation:** **FUTURE IMPLEMENTATION — OUTSIDE M0-B** unless a section is explicitly identified as M0-B design guidance.
+**Implementation:** **FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE** unless a section explicitly records already-merged M0-B behavior.
 
 ## Principles
 
@@ -113,20 +113,44 @@ Properties: title, message, illustration/icon swap, primary action label/visibil
 
 ## Camera Setup Status
 
-**M0-B DESIGN GUIDANCE ONLY — NO PRODUCTION CODE CHANGES IN THIS PHASE.**
+### M0-B IMPLEMENTED BEHAVIOUR
 
-Variant axis: `State={PermissionLoading,PermissionRequired,Denied,Restricted,SetupReady,PreviewInactive,PreviewActive,Interrupted,ManualFallback}` = 9.
+The stable M0-B baseline is a technical React Native camera shell and reducer, not the approved product UI. Its implemented contract is:
+
+| Implemented state/condition | Stable behavior |
+| --- | --- |
+| Permission snapshot loading | Lifecycle remains `unavailable`; preview is not mounted. |
+| Permission granted | Lifecycle becomes `ready_to_setup`; permission alone never mounts the preview. |
+| Permission undetermined and requestable | The user may explicitly request permission; lifecycle passes through `requesting_permission`. |
+| Permission denied and not requestable | Lifecycle becomes `permission_denied`; manual fallback is available. |
+| Explicit camera start with permission granted | Lifecycle becomes `preview_active` and mounts `CameraView`. |
+| App backgrounding, preview mount failure, or permission revocation while active | Preview is unmounted and the lifecycle becomes `preview_interrupted` or returns to a permission state. |
+| Resume while still permitted | The user can explicitly reactivate the preview. |
+| Manual fallback | Lifecycle becomes `manual_fallback`; the camera is not required to continue the milestone flow. |
+
+The prototype action priority is permission request → start camera → resume preview → manual fallback. In states without one of the first three actions, its technical shell defaults to manual fallback. The merged screen uses hard-coded dark styling, native `Button`, milestone/engineering copy, and a generic OS permission string. These details are implementation evidence only and are not design-system precedent.
+
+M0-B evidence does not claim physical-device verification of the OS prompt, blocked-permission path, live camera output, background interruption, mount failure, or iOS native behavior. Designs must not present those paths as validated merely because reducer tests exist.
+
+### DESIGN RECOMMENDATION FOR FUTURE IMPLEMENTATION
+
+**FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE. NO PRODUCTION CODE CHANGES IN THIS DESIGN PHASE.**
+
+Variant axis: `State={PermissionLoading,PermissionRequired,PermissionRequesting,Denied,Restricted,SetupReady,PreviewInactive,PreviewActive,Interrupted,Unavailable,ManualFallback}` = 11.
 
 Properties: title, explanation, primary/secondary action labels, status icon swap.
 
 - Permission request explains camera purpose before the system prompt.
-- Denied and restricted are distinct; restricted does not promise a settings action that the OS cannot provide.
+- Denied, restricted, revoked, unsupported, and mount-failure outcomes map to truthful, platform-appropriate recovery. Restricted does not promise a settings action that the OS cannot provide.
 - Preview starts only after the explicit setup gate.
-- Background/interruption recovery states state whether preview is inactive.
+- Requesting permission has a visible progress state and prevents duplicate requests.
+- Background/interruption recovery states say whether preview is inactive and whether resume is currently possible.
 - Manual fallback preserves the current set and is never visually subordinate to an unusable camera path.
+- Primary/secondary action hierarchy is intentional per state; the technical shell's default-fallback behavior is not copied automatically.
+- Product copy removes milestone names, reducer labels, and pipeline terminology.
 - Status text and accessible announcements accompany visual indicators.
 
-Anything beyond permission, preview lifecycle, interruption recovery, and manual fallback is **FUTURE IMPLEMENTATION — OUTSIDE M0-B**, including calibration, skeleton overlay, rep counting, form cues, scoring, and result summaries.
+Anything beyond permission, preview lifecycle, interruption recovery, and manual fallback is **FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE**, including calibration, skeleton overlay, rep counting, form cues, scoring, and result summaries.
 
 ## Platform wrappers
 
