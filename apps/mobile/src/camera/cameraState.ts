@@ -66,7 +66,7 @@ export function reduceCameraScreenState(
 ): CameraScreenState {
   switch (event.type) {
     case 'permission_snapshot':
-      return derivePermissionSnapshotState(event.snapshot);
+      return derivePermissionSnapshotState(current, event.snapshot);
     case 'request_permission_started':
       return {
         ...current,
@@ -103,13 +103,37 @@ export function reduceCameraScreenState(
 }
 
 function derivePermissionSnapshotState(
+  current: CameraScreenState,
   snapshot: CameraPermissionSnapshot | null,
 ): CameraScreenState {
   if (!snapshot || snapshot.isLoading) {
-    return deriveInitialCameraState();
+    return {
+      ...current,
+      permission: 'loading',
+      canRequestPermission: false,
+      canShowPreview: false,
+      statusMessage: UNAVAILABLE_MESSAGE,
+      lifecycle:
+        current.lifecycle === 'manual_fallback' ||
+        current.lifecycle === 'preview_interrupted'
+          ? current.lifecycle
+          : 'unavailable',
+      shouldShowManualFallback: current.lifecycle === 'manual_fallback',
+    };
   }
 
   if (snapshot.granted) {
+    if (
+      current.lifecycle === 'manual_fallback' ||
+      current.lifecycle === 'preview_interrupted' ||
+      current.lifecycle === 'preview_active'
+    ) {
+      return {
+        ...current,
+        permission: 'granted',
+      };
+    }
+
     return {
       permission: 'granted',
       lifecycle: 'ready_to_setup',
@@ -120,8 +144,40 @@ function derivePermissionSnapshotState(
     };
   }
 
+  const permissionState = snapshot.canAskAgain ? 'undetermined' : 'denied';
+
+  if (current.lifecycle === 'manual_fallback') {
+    return {
+      ...current,
+      permission: permissionState,
+      canRequestPermission: snapshot.canAskAgain,
+      shouldShowManualFallback: true,
+      statusMessage: MANUAL_FALLBACK_MESSAGE,
+    };
+  }
+
+  if (current.lifecycle === 'preview_interrupted') {
+    return {
+      ...current,
+      permission: permissionState,
+      canRequestPermission: snapshot.canAskAgain,
+      statusMessage: INTERRUPTED_MESSAGE,
+    };
+  }
+
+  if (current.lifecycle === 'preview_active') {
+    return {
+      permission: permissionState,
+      lifecycle: snapshot.canAskAgain ? 'ready_to_setup' : 'permission_denied',
+      canShowPreview: false,
+      canRequestPermission: snapshot.canAskAgain,
+      shouldShowManualFallback: !snapshot.canAskAgain,
+      statusMessage: snapshot.canAskAgain ? PERMISSION_MESSAGE : DENIED_MESSAGE,
+    };
+  }
+
   return {
-    permission: snapshot.canAskAgain ? 'undetermined' : 'denied',
+    permission: permissionState,
     lifecycle: snapshot.canAskAgain ? 'ready_to_setup' : 'permission_denied',
     canShowPreview: false,
     canRequestPermission: snapshot.canAskAgain,

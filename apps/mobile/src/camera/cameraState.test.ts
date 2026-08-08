@@ -94,6 +94,7 @@ describe('cameraState', () => {
     ).toMatchObject({
       lifecycle: 'preview_active',
       canShowPreview: true,
+      shouldShowManualFallback: false,
     });
   });
 
@@ -107,9 +108,102 @@ describe('cameraState', () => {
     ).toEqual(readyToSetup);
   });
 
-  it('moves to interruption state when the active preview is backgrounded', () => {
+  it('preserves manual fallback on repeated granted permission snapshots', () => {
+    const manualFallback = reduceCameraScreenState(grantedState(), {
+      type: 'enter_manual_fallback',
+    });
+
     expect(
-      reduceCameraScreenState(grantedState(), {
+      reduceCameraScreenState(manualFallback, {
+        type: 'permission_snapshot',
+        snapshot: {
+          isLoading: false,
+          granted: true,
+          canAskAgain: false,
+        },
+      }),
+    ).toMatchObject({
+      permission: 'granted',
+      lifecycle: 'manual_fallback',
+      canShowPreview: false,
+      shouldShowManualFallback: true,
+    });
+  });
+
+  it('preserves preview interruption on repeated granted permission snapshots', () => {
+    const interrupted = reduceCameraScreenState(grantedState(), {
+      type: 'camera_interrupted',
+      reason: 'backgrounded',
+    });
+
+    expect(
+      reduceCameraScreenState(interrupted, {
+        type: 'permission_snapshot',
+        snapshot: {
+          isLoading: false,
+          granted: true,
+          canAskAgain: false,
+        },
+      }),
+    ).toMatchObject({
+      permission: 'granted',
+      lifecycle: 'preview_interrupted',
+      canShowPreview: false,
+      shouldShowManualFallback: true,
+    });
+  });
+
+  it('exits active preview safely if permission is revoked but can still be requested', () => {
+    const activePreview = reduceCameraScreenState(grantedState(), {
+      type: 'start_preview',
+    });
+
+    expect(
+      reduceCameraScreenState(activePreview, {
+        type: 'permission_snapshot',
+        snapshot: {
+          isLoading: false,
+          granted: false,
+          canAskAgain: true,
+        },
+      }),
+    ).toMatchObject({
+      permission: 'undetermined',
+      lifecycle: 'ready_to_setup',
+      canShowPreview: false,
+      canRequestPermission: true,
+    });
+  });
+
+  it('exits active preview safely if permission is revoked and cannot be requested again', () => {
+    const activePreview = reduceCameraScreenState(grantedState(), {
+      type: 'start_preview',
+    });
+
+    expect(
+      reduceCameraScreenState(activePreview, {
+        type: 'permission_snapshot',
+        snapshot: {
+          isLoading: false,
+          granted: false,
+          canAskAgain: false,
+        },
+      }),
+    ).toMatchObject({
+      permission: 'denied',
+      lifecycle: 'permission_denied',
+      canShowPreview: false,
+      shouldShowManualFallback: true,
+    });
+  });
+
+  it('moves to interruption state when the active preview is backgrounded', () => {
+    const activePreview = reduceCameraScreenState(grantedState(), {
+      type: 'start_preview',
+    });
+
+    expect(
+      reduceCameraScreenState(activePreview, {
         type: 'camera_interrupted',
         reason: 'backgrounded',
       }),
