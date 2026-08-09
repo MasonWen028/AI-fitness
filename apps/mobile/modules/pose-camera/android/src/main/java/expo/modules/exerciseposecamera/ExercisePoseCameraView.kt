@@ -2,23 +2,22 @@ package expo.modules.exerciseposecamera
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.os.SystemClock
 import android.util.Size
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
-import androidx.camera.core.UseCaseGroup
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.view.PreviewView
-import androidx.core.content.ContextCompat
-import expo.modules.kotlin.AppContext
-import expo.modules.kotlin.viewevent.EventDispatcher
-import expo.modules.kotlin.views.ExpoView
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.components.containers.Landmark
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
@@ -27,6 +26,9 @@ import com.google.mediapipe.tasks.core.Delegate
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarkerResult
+import expo.modules.kotlin.AppContext
+import expo.modules.kotlin.viewevent.EventDispatcher
+import expo.modules.kotlin.views.ExpoView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,6 +46,9 @@ class ExercisePoseCameraView(
   context: Context,
   appContext: AppContext,
 ) : ExpoView(context, appContext), Closeable {
+  private val currentActivity: AppCompatActivity
+    get() = appContext.throwingActivity as AppCompatActivity
+
   private val previewView = PreviewView(context)
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
   private val analysisExecutor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -51,7 +56,7 @@ class ExercisePoseCameraView(
   private val onPoseObservation by EventDispatcher<Map<String, Any?>>()
   private val onProviderError by EventDispatcher<Map<String, Any?>>()
 
-  private var providerSessionId = AtomicLong(0)
+  private val providerSessionId = AtomicLong(0)
   private var activeSessionId = 0L
   private var poseLandmarker: PoseLandmarker? = null
   private var cameraProvider: ProcessCameraProvider? = null
@@ -59,7 +64,7 @@ class ExercisePoseCameraView(
   private var imageAnalysis: ImageAnalysis? = null
   private var preview: Preview? = null
   private var setupJob: Job? = null
-  private var inferenceInFlight = AtomicBoolean(false)
+  private val inferenceInFlight = AtomicBoolean(false)
   private var lastEmittedSequence = 0L
   private var currentSequence = 0L
 
@@ -84,9 +89,38 @@ class ExercisePoseCameraView(
   private var lastInferenceMs = 0L
   private var lastTimestampMs = 0L
   private var lastFrameId = 0L
+  private var lastRotationDegrees = 0
+  private var cameraBound = false
+  private var previewStreamStateName = PreviewView.StreamState.IDLE.name
+  private var cameraStateName = "UNBOUND"
+  private var cameraErrorCode: Int? = null
+  private var lifecycleStateName = "UNKNOWN"
+  private var availableCameraCount = 0
+  private var selectedCameraExists = false
+  private var selectedLensFacing = "BACK"
+  private var lastSetupReason = "initial"
 
   init {
+    previewView.layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+    previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
     addView(previewView)
+  }
+
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    post {
+      maybeStartSession("view_attached_post")
+    }
+  }
+
+  override fun onDetachedFromWindow() {
+    shutdownSession("view_detached")
+    super.onDetachedFromWindow()
+  }
+
+  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+    super.onLayout(changed, left, top, right, bottom)
+    previewView.layout(0, 0, right - left, bottom - top)
   }
 
   fun onPropsUpdated() {
@@ -95,22 +129,40 @@ class ExercisePoseCameraView(
       return
     }
 
-    if (setupJob?.isActive == true) {
+    maybeStartSession("props_updated")
+  }
+
+  private fun maybeStartSession(reason: String) {
+    if (!active || !isAttachedToWindow || activeSessionId != 0L || setupJob?.isActive == true) {
       return
     }
 
+    lastSetupReason = reason
     setupJob = scope.launch {
-      startSession()
+      try {
+        startSession(reason)
+      } finally {
+        setupJob = null
+      }
     }
   }
 
-  private suspend fun startSession() {
-    shutdownSession()
+  private suspend fun startSession(reason: String) {
+    shutdownSession("start_session_reset")
 
-    activeSessionId = providerSessionId.incrementAndGet()
+    val sessionId = providerSessionId.incrementAndGet()
+    activeSessionId = sessionId
     currentSequence = 0
     lastEmittedSequence = 0
     lastError = null
+    lastInferenceMs = 0
+    lastTimestampMs = 0
+    lastFrameId = 0
+    lastRotationDegrees = 0
+    cameraBound = false
+    previewStreamStateName = PreviewView.StreamState.IDLE.name
+    cameraStateName = "STARTING"
+    cameraErrorCode = null
     providerLoadAttempts.incrementAndGet()
     emitStatus()
 
@@ -136,39 +188,60 @@ class ExercisePoseCameraView(
           .setMinTrackingConfidence(DEFAULT_CONFIDENCE)
           .setMinPosePresenceConfidence(DEFAULT_CONFIDENCE)
           .setResultListener { result, input ->
-            handlePoseResult(activeSessionId, result, input.width, input.height)
+            handlePoseResult(sessionId, result, input.width, input.height)
           }
           .setErrorListener { error ->
-            handleProviderError(activeSessionId, error.message ?: "Pose provider error")
+            handleProviderError(sessionId, error.message ?: "Pose provider error")
           }
           .build(),
       )
 
       cameraProvider = ProcessCameraProvider.awaitInstance(context)
-      bindCameraUseCases(activeSessionId)
+      if (!isAttachedToWindow || sessionId != activeSessionId) {
+        return
+      }
+      availableCameraCount = cameraProvider?.availableCameraInfos?.size ?: 0
+
+      bindCameraUseCases(sessionId)
+      previewView.post {
+        previewView.requestLayout()
+        previewView.invalidate()
+      }
       emitStatus()
     } catch (error: Exception) {
       providerLoadFailures.incrementAndGet()
+      cameraStateName = "START_FAILED"
       lastError = error.message ?: "Pose provider failed to initialize"
       emitProviderError(lastError ?: "Pose provider failed to initialize")
       emitStatus()
-      shutdownSession()
+      shutdownSession(reason)
     }
   }
 
   @SuppressLint("UnsafeOptInUsageError")
   private fun bindCameraUseCases(sessionId: Long) {
-    val provider = cameraProvider ?: return
+    val provider = cameraProvider ?: error("Camera provider unavailable during bind")
+    val lifecycleOwner = currentActivity
+    lifecycleStateName = lifecycleOwner.lifecycle.currentState.name
 
+    selectedLensFacing = if (facing == "front") "FRONT" else "BACK"
     val cameraSelector = CameraSelector.Builder()
       .requireLensFacing(
         if (facing == "front") CameraSelector.LENS_FACING_FRONT else CameraSelector.LENS_FACING_BACK,
       )
       .build()
 
+    selectedCameraExists = provider.hasCamera(cameraSelector)
+    if (!selectedCameraExists) {
+      error("No camera matches lens facing $selectedLensFacing")
+    }
+
     val resolutionSelector = ResolutionSelector.Builder()
       .setResolutionStrategy(
-        ResolutionStrategy(Size(1280, 720), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER),
+        ResolutionStrategy(
+          Size(1280, 720),
+          ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
+        ),
       )
       .build()
 
@@ -191,14 +264,10 @@ class ExercisePoseCameraView(
       }
 
     provider.unbindAll()
-    camera = provider.bindToLifecycle(
-      appContext.throwingActivity,
-      cameraSelector,
-      UseCaseGroup.Builder()
-        .addUseCase(preview!!)
-        .addUseCase(imageAnalysis!!)
-        .build(),
-    )
+    camera = provider.bindToLifecycle(currentActivity, cameraSelector, preview, imageAnalysis)
+    cameraBound = true
+    cameraStateName = "camera_bound"
+    observeRuntimeState()
   }
 
   private fun analyzeImage(sessionId: Long, imageProxy: ImageProxy) {
@@ -218,19 +287,21 @@ class ExercisePoseCameraView(
 
     val localFrameId = framesReceived.get()
     val timestampMs = SystemClock.elapsedRealtime()
-    val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+    val rotationDegrees = normalizeRotation(imageProxy.imageInfo.rotationDegrees)
 
     try {
-      val bitmapBuffer = android.graphics.Bitmap.createBitmap(
+      val bitmapBuffer = Bitmap.createBitmap(
         imageProxy.width,
         imageProxy.height,
-        android.graphics.Bitmap.Config.ARGB_8888,
+        Bitmap.Config.ARGB_8888,
       )
       bitmapBuffer.copyPixelsFromBuffer(imageProxy.planes[0].buffer)
-      val mpImage = BitmapImageBuilder(bitmapBuffer).build()
+      val transformedBitmap = createTransformedBitmap(bitmapBuffer, rotationDegrees)
+      val mpImage = BitmapImageBuilder(transformedBitmap).build()
       framesSubmitted.incrementAndGet()
       lastTimestampMs = timestampMs
       lastFrameId = localFrameId
+      lastRotationDegrees = rotationDegrees
       poseLandmarker?.detectAsync(mpImage, timestampMs)
     } catch (error: Exception) {
       providerErrors.incrementAndGet()
@@ -240,6 +311,25 @@ class ExercisePoseCameraView(
     } finally {
       imageProxy.close()
     }
+  }
+
+  private fun createTransformedBitmap(source: Bitmap, rotationDegrees: Int): Bitmap {
+    if (rotationDegrees == 0 && !shouldMirrorFrame()) {
+      return source
+    }
+
+    val matrix = Matrix().apply {
+      postRotate(rotationDegrees.toFloat())
+      if (shouldMirrorFrame()) {
+        postScale(-1f, 1f, source.width.toFloat(), source.height.toFloat())
+      }
+    }
+
+    return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+  }
+
+  private fun shouldMirrorFrame(): Boolean {
+    return mirrored && facing == "front"
   }
 
   private fun handlePoseResult(
@@ -265,7 +355,7 @@ class ExercisePoseCameraView(
 
     val people = result.landmarks().mapIndexed { index, landmarks ->
       val worldLandmarks = result.worldLandmarks().getOrNull(index)
-      mapOf(
+      mutableMapOf<String, Any?>(
         "trackingId" to null,
         "imageLandmarks" to mapNormalizedLandmarks(landmarks),
         "worldLandmarks" to mapWorldLandmarks(worldLandmarks ?: emptyList()),
@@ -285,20 +375,20 @@ class ExercisePoseCameraView(
     }
 
     onPoseObservation(
-      mapOf(
+      mutableMapOf<String, Any?>(
         "sequence" to sequence.toDouble(),
         "timestampMs" to result.timestampMs().toDouble(),
         "landmarksAvailable" to landmarksAvailable,
-        "landmarkCount" to (people.firstOrNull()?.get("imageLandmarks") as? List<*>)?.size?.toDouble() ?: 0.0,
+        "landmarkCount" to ((people.firstOrNull()?.get("imageLandmarks") as? List<*>)?.size?.toDouble() ?: 0.0),
         "frameId" to lastFrameId.toDouble(),
-        "imageSize" to mapOf(
+        "imageSize" to mutableMapOf<String, Any?>(
           "width" to imageWidth,
           "height" to imageHeight,
         ),
-        "rotationDegrees" to normalizeRotation(0),
-        "mirrored" to mirrored,
+        "rotationDegrees" to lastRotationDegrees,
+        "mirrored" to shouldMirrorFrame(),
         "people" to people,
-        "provider" to mapOf(
+        "provider" to mutableMapOf<String, Any?>(
           "name" to PROVIDER_NAME,
           "modelVersion" to modelAssetPath,
           "delegate" to delegateName.uppercase(),
@@ -324,9 +414,11 @@ class ExercisePoseCameraView(
     inferenceInFlight.set(false)
   }
 
-  private fun mapNormalizedLandmarks(landmarks: List<NormalizedLandmark>): List<Map<String, Any?>> {
+  private fun mapNormalizedLandmarks(
+    landmarks: List<NormalizedLandmark>,
+  ): List<Map<String, Any?>> {
     return landmarks.mapIndexed { index, landmark ->
-      mapOf(
+      mutableMapOf<String, Any?>(
         "name" to CANONICAL_LANDMARK_NAMES[index],
         "x" to landmark.x().toDouble(),
         "y" to landmark.y().toDouble(),
@@ -339,7 +431,7 @@ class ExercisePoseCameraView(
 
   private fun mapWorldLandmarks(landmarks: List<Landmark>): List<Map<String, Any?>> {
     return landmarks.mapIndexed { index, landmark ->
-      mapOf(
+      mutableMapOf<String, Any?>(
         "name" to CANONICAL_LANDMARK_NAMES[index],
         "x" to landmark.x().toDouble(),
         "y" to landmark.y().toDouble(),
@@ -353,50 +445,70 @@ class ExercisePoseCameraView(
   private fun normalizeRotation(rotationDegrees: Int): Int {
     val normalized = ((rotationDegrees % 360) + 360) % 360
     return when (normalized) {
-      0, 90, 180, 270 -> normalized
+      90, 180, 270 -> normalized
       else -> 0
     }
   }
 
   private fun emitProviderError(message: String) {
-    onProviderError(mapOf("message" to message))
+    onProviderError(mutableMapOf("message" to message))
   }
 
   private fun emitStatus() {
+    val health = mutableMapOf<String, Any?>(
+      "providerLoadAttempts" to providerLoadAttempts.get().toDouble(),
+      "providerLoadFailures" to providerLoadFailures.get().toDouble(),
+      "framesReceived" to framesReceived.get().toDouble(),
+      "framesSubmitted" to framesSubmitted.get().toDouble(),
+      "framesDropped" to framesDropped.get().toDouble(),
+      "observationsProduced" to observationsProduced.get().toDouble(),
+      "observationsWithLandmarks" to observationsWithLandmarks.get().toDouble(),
+      "observationsWithoutLandmarks" to observationsWithoutLandmarks.get().toDouble(),
+      "providerErrors" to providerErrors.get().toDouble(),
+      "trackingLossCount" to trackingLossCount.get().toDouble(),
+      "lastSequence" to lastEmittedSequence.toDouble(),
+      "lastFrameId" to lastFrameId.toDouble(),
+      "lastTimestampMs" to lastTimestampMs.toDouble(),
+      "lastInferenceMs" to lastInferenceMs.toDouble(),
+    )
+
+    val diagnostics = mutableMapOf<String, Any?>(
+      "cameraBound" to cameraBound,
+      "cameraState" to cameraStateName,
+      "cameraErrorCode" to cameraErrorCode,
+      "previewStreamState" to previewStreamStateName,
+      "viewAttached" to isAttachedToWindow,
+      "previewWidth" to previewView.width,
+      "previewHeight" to previewView.height,
+      "displayRotation" to (previewView.display?.rotation ?: -1),
+      "implementationMode" to previewView.implementationMode.name,
+      "lifecycleState" to lifecycleStateName,
+      "availableCameraCount" to availableCameraCount,
+      "selectedLensFacing" to selectedLensFacing,
+      "selectedCameraExists" to selectedCameraExists,
+      "setupReason" to lastSetupReason,
+    )
+
     onProviderStatus(
-      mapOf(
-        "isAvailable" to (poseLandmarker != null),
+      mutableMapOf<String, Any?>(
+        "isAvailable" to (cameraProvider != null || poseLandmarker != null),
         "providerName" to PROVIDER_NAME,
         "modelVersion" to modelAssetPath,
-        "delegate" to delegateName.uppercase(),
-        "isRunning" to (active && poseLandmarker != null),
+        "delegate" to if (poseLandmarker != null) delegateName.uppercase() else "UNKNOWN",
+        "isRunning" to (cameraBound && previewStreamStateName == PreviewView.StreamState.STREAMING.name),
         "lastError" to lastError,
-        "health" to mapOf(
-          "providerLoadAttempts" to providerLoadAttempts.get().toDouble(),
-          "providerLoadFailures" to providerLoadFailures.get().toDouble(),
-          "framesReceived" to framesReceived.get().toDouble(),
-          "framesSubmitted" to framesSubmitted.get().toDouble(),
-          "framesDropped" to framesDropped.get().toDouble(),
-          "observationsProduced" to observationsProduced.get().toDouble(),
-          "observationsWithLandmarks" to observationsWithLandmarks.get().toDouble(),
-          "observationsWithoutLandmarks" to observationsWithoutLandmarks.get().toDouble(),
-          "providerErrors" to providerErrors.get().toDouble(),
-          "trackingLossCount" to trackingLossCount.get().toDouble(),
-          "lastSequence" to lastEmittedSequence.toDouble(),
-          "lastFrameId" to lastFrameId.toDouble(),
-          "lastTimestampMs" to lastTimestampMs.toDouble(),
-          "lastInferenceMs" to lastInferenceMs.toDouble(),
-        ),
+        "health" to health,
+        "diagnostics" to diagnostics,
       ),
     )
   }
 
   fun shutdown() {
     active = false
-    shutdownSession()
+    shutdownSession("shutdown")
   }
 
-  private fun shutdownSession() {
+  private fun shutdownSession(reason: String) {
     activeSessionId = 0
     inferenceInFlight.set(false)
     imageAnalysis?.clearAnalyzer()
@@ -407,20 +519,33 @@ class ExercisePoseCameraView(
     poseLandmarker = null
     camera = null
     preview = null
+    cameraBound = false
+    cameraStateName = "CLOSING"
+    previewStreamStateName = PreviewView.StreamState.IDLE.name
+    lastSetupReason = reason
     emitStatus()
   }
 
   override fun close() {
     shutdown()
-    analysisExecutor.shutdownNow()
     setupJob?.cancel()
+    analysisExecutor.shutdownNow()
     scope.cancel()
   }
 
-  companion object {
-    const val DEFAULT_CONFIDENCE = 0.5F
-    const val DEFAULT_MODEL_ASSET_PATH = "pose_landmarker_lite.task"
-    const val DEFAULT_DELEGATE_NAME = "CPU"
-    const val PROVIDER_NAME = "mediapipe"
+  private fun observeRuntimeState() {
+    previewView.previewStreamState.observeForever { state ->
+      previewStreamStateName = state?.name ?: "UNKNOWN"
+      if (state == PreviewView.StreamState.STREAMING) {
+        cameraStateName = "OPEN"
+      }
+      emitStatus()
+    }
+
+    camera?.cameraInfo?.cameraState?.observe(currentActivity) { state ->
+      cameraStateName = state?.type?.name ?: "UNKNOWN"
+      cameraErrorCode = state?.error?.code
+      emitStatus()
+    }
   }
 }
