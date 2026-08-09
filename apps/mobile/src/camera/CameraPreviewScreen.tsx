@@ -7,6 +7,7 @@ import {
   Platform,
   SafeAreaView,
   StyleSheet,
+  Switch,
   Text,
   View,
 } from 'react-native';
@@ -15,6 +16,7 @@ import { PoseCameraView } from '../../modules/pose-camera';
 import type { PoseProviderStatus } from '../pose/poseProviderStatus';
 import { getUnavailablePoseProviderStatus } from '../pose/poseProviderStatus';
 import type { PoseObservation } from '../pose/poseContract';
+import SkeletonOverlay from '../ui/SkeletonOverlay';
 import {
   deriveInitialCameraState,
   reduceCameraScreenState,
@@ -24,6 +26,9 @@ type CameraPreviewScreenProps = {
   title: string;
   subtitle: string;
 };
+
+const OVERLAY_WIDTH = 320;
+const OVERLAY_HEIGHT = 480;
 
 export function CameraPreviewScreen({
   title,
@@ -40,6 +45,7 @@ export function CameraPreviewScreen({
   );
   const [lastObservation, setLastObservation] =
     useState<PoseObservation | null>(null);
+  const [overlayEnabled, setOverlayEnabled] = useState(true);
 
   useEffect(() => {
     dispatch({
@@ -144,6 +150,14 @@ export function CameraPreviewScreen({
           Snapshot: granted={permission?.granted ? 'true' : 'false'} · canAskAgain=
           {permission?.canAskAgain ? 'true' : 'false'}
         </Text>
+        <View style={styles.toggleRow}>
+          <Text style={styles.toggleLabel}>Skeleton overlay</Text>
+          <Switch
+            accessibilityLabel="Toggle skeleton overlay"
+            onValueChange={setOverlayEnabled}
+            value={overlayEnabled}
+          />
+        </View>
         <Text style={styles.providerStatus}>
           Provider: {providerStatus.providerName} · {providerStatus.delegate} ·{' '}
           {providerStatus.isAvailable ? 'available' : 'unavailable'}
@@ -199,6 +213,12 @@ export function CameraPreviewScreen({
               lastError: event.nativeEvent.message,
             }));
           }}
+        />
+        <SkeletonOverlay
+          height={OVERLAY_HEIGHT}
+          observation={lastObservation}
+          visible={showPreview && overlayEnabled}
+          width={OVERLAY_WIDTH}
         />
         {!showPreview ? (
           <View style={styles.previewOverlay}>
@@ -259,6 +279,16 @@ const styles = StyleSheet.create({
     color: '#fca5a5',
     fontSize: 12,
     textAlign: 'center',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  toggleLabel: {
+    color: '#e2e8f0',
+    fontSize: 13,
   },
   previewShell: {
     flex: 1,
