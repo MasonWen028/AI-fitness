@@ -106,13 +106,29 @@ export function CameraPreviewScreen({
       };
     }
 
+    if (state.lifecycle === 'manual_fallback' && state.permission === 'granted') {
+      return {
+        label: 'Return To Camera Setup',
+        onPress: () => {
+          dispatch({
+            type: 'permission_snapshot',
+            snapshot: {
+              isLoading: false,
+              granted: true,
+              canAskAgain: permission?.canAskAgain ?? false,
+            },
+          });
+        },
+      };
+    }
+
     return {
       label: 'Use Manual Fallback',
       onPress: () => {
         dispatch({ type: 'enter_manual_fallback' });
       },
     };
-  }, [requestPermission, showPermissionButton, state.lifecycle]);
+  }, [permission?.canAskAgain, requestPermission, showPermissionButton, state.lifecycle, state.permission]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -120,6 +136,14 @@ export function CameraPreviewScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.body}>{subtitle}</Text>
         <Text style={styles.status}>{state.statusMessage}</Text>
+        <Text style={styles.providerDetail}>
+          Lifecycle: {state.lifecycle} · Permission: {state.permission} · Can
+          request: {state.canRequestPermission ? 'yes' : 'no'}
+        </Text>
+        <Text style={styles.providerDetail}>
+          Snapshot: granted={permission?.granted ? 'true' : 'false'} · canAskAgain=
+          {permission?.canAskAgain ? 'true' : 'false'}
+        </Text>
         <Text style={styles.providerStatus}>
           Provider: {providerStatus.providerName} · {providerStatus.delegate} ·{' '}
           {providerStatus.isAvailable ? 'available' : 'unavailable'}
@@ -155,38 +179,37 @@ export function CameraPreviewScreen({
         ) : null}
       </View>
 
-      {showPreview ? (
-        <View style={styles.previewShell}>
-          <PoseCameraView
-            active
-            delegate="CPU"
-            facing="back"
-            mirrored={false}
-            modelAssetPath="pose_landmarker_lite.task"
-            style={styles.preview}
-            onProviderStatus={(event) => {
-              setProviderStatus(event.nativeEvent);
-            }}
-            onPoseObservation={(event) => {
-              setLastObservation(event.nativeEvent);
-            }}
-            onProviderError={(event) => {
-              setProviderStatus((current) => ({
-                ...current,
-                lastError: event.nativeEvent.message,
-              }));
-            }}
-          />
-        </View>
-      ) : (
-        <View style={styles.placeholderShell}>
-          <Text style={styles.placeholderTitle}>Camera preview inactive</Text>
-          <Text style={styles.placeholderBody}>
-            M0-C wires a native pose provider boundary, provider metadata, and
-            health status into the existing preview shell.
-          </Text>
-        </View>
-      )}
+      <View style={styles.previewShell}>
+        <PoseCameraView
+          active={state.permission === 'granted'}
+          delegate="CPU"
+          facing="back"
+          mirrored={false}
+          modelAssetPath="pose_landmarker_lite.task"
+          style={styles.preview}
+          onProviderStatus={(event) => {
+            setProviderStatus(event.nativeEvent);
+          }}
+          onPoseObservation={(event) => {
+            setLastObservation(event.nativeEvent);
+          }}
+          onProviderError={(event) => {
+            setProviderStatus((current) => ({
+              ...current,
+              lastError: event.nativeEvent.message,
+            }));
+          }}
+        />
+        {!showPreview ? (
+          <View style={styles.previewOverlay}>
+            <Text style={styles.placeholderTitle}>Camera preview inactive</Text>
+            <Text style={styles.placeholderBody}>
+              M0-C wires a native pose provider boundary, provider metadata, and
+              health status into the existing preview shell.
+            </Text>
+          </View>
+        ) : null}
+      </View>
 
       <View style={styles.actions}>
         <Button onPress={primaryAction.onPress} title={primaryAction.label} />
@@ -243,19 +266,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#1e293b',
+    position: 'relative',
   },
   preview: {
     flex: 1,
   },
-  placeholderShell: {
-    flex: 1,
+  previewOverlay: {
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#1e293b',
     padding: 24,
     gap: 12,
+    backgroundColor: 'rgba(11, 16, 32, 0.72)',
   },
   placeholderTitle: {
     color: '#f8fafc',
