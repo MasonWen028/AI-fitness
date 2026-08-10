@@ -1,5 +1,9 @@
 # M0-Q Evidence — M0 Gate Report
 
+> **⚠️ HISTORICAL RECORD — SUPERSEDED BY M0-R0**
+>
+> This document captures the *original* M0 gate assessment. Per `docs/reviews/M0-R0-REQUIREMENT-RECONCILIATION.md` (R0 CLOSED 2026-08-10) and `docs/evidence/M0-R0-APPLIED.md`, SRS `M0-GATE-001` is **binary: FULL PASS or REQUEST CHANGES**. The "Conditional Pass" conclusion below is preserved as historical record and is **not** current gate status.
+
 ## VERIFIED
 
 ### Work Package

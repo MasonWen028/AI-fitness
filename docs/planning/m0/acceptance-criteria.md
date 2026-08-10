@@ -1,5 +1,7 @@
 # M0 Acceptance Criteria
 
+> **Governance note:** Per M0-R0 (R0 CLOSED 2026-08-10), `M0-GATE-001` decision is binary — **FULL PASS** or **REQUEST CHANGES**. No "Conditional Pass" state exists. See `docs/evidence/M0-R0-APPLIED.md`.
+
 ## M0-A — Technical Shell
 
 - React Native shell runs on target iOS/Android development path
@@ -83,4 +85,4 @@
 
 - all evidence artifacts are assembled
 - `M0-GATE-001` can be evaluated without guessing missing inputs
-- gate decision is documented as pass / conditional pass / fail
+- gate decision is documented as FULL PASS / REQUEST CHANGES (binary, per SRS M0-GATE-001 — no conditional-pass state)

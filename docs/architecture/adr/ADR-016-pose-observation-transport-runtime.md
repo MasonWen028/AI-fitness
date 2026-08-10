@@ -175,7 +175,7 @@ Numeric thresholds remain governed by the approved M0 benchmark plan. The standa
 - no unbounded frame or observation queue
 - same semantic expectations for all candidates
 - no fabricated results
-- excluded candidates require explicit technical reason, not schedule preference
+- excluded candidates MUST have recorded technical evidence demonstrating non-viability, not schedule preference (per C5, M0-R0 reconciliation)
 
 ## Consequences
 
@@ -193,8 +193,8 @@ Revisit when:
 ## Related Requirements
 
 - FR-TRANSPORT-001 through FR-TRANSPORT-006
-- FR-AIFC-001 through FR-AIFC-009
-- FR-POSE-001 through FR-POSE-009
+- FR-AIFC-001 through FR-AIFC-009 — *mandatory M0 (confirmed by M0-R0 reconciliation, 2026-08-10)*
+- FR-POSE-001 through FR-POSE-006, FR-POSE-007a, FR-POSE-008, FR-POSE-009a (M0); FR-POSE-007b, FR-POSE-009b (M1) — *split by M0-R0 reconciliation (2026-08-10)*
 - NFR-PERF-004 through NFR-PERF-008
 - M0-ENG-001 through M0-ENG-008
 - `M0-GATE-001`

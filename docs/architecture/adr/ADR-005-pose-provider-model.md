@@ -105,13 +105,13 @@ Revisit if MediaPipe fails:
 
 ## Related Requirements
 
-- FR-POSE-001 through FR-POSE-009
+- FR-POSE-001 through FR-POSE-006, FR-POSE-007a, FR-POSE-008, FR-POSE-009a (M0); FR-POSE-007b, FR-POSE-009b (M1) — *FR-POSE-007/009 split by M0-R0 reconciliation (2026-08-10)*
 - FR-TRANSPORT-001 through FR-TRANSPORT-006
 - NFR-PERF-004 through NFR-PERF-008
 - M0-ENG-001 through M0-ENG-008
 - FR-POSE-002
 - FR-POSE-003
-- FR-POSE-007
-- FR-POSE-009
+- FR-POSE-007a (M0) — active M0 provider passes canonical conformance suite; FR-POSE-007b (M1) — provider replacement before production release
+- FR-POSE-009a (M0) — versioned + integrity-checked against profile manifest; FR-POSE-009b (M1) — verified against signed application manifest at release
 - AC-POSE-001
 - AC-PERF-002

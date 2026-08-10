@@ -98,7 +98,7 @@ Revisit if Expo materially blocks camera/provider/runtime needs or if benchmark 
 
 - FR-MOB-001 through FR-MOB-011
 - FR-CAMERA-001 through FR-CAMERA-009
-- FR-AIFC-001 through FR-AIFC-009
+- FR-AIFC-001 through FR-AIFC-009 — *mandatory M0 (confirmed by M0-R0 reconciliation, 2026-08-10); the M0 implementation SHALL cover the full explicit lifecycle state model; any specific state deferred to a later milestone MUST be documented with explicit SRS/ADR rationale*
 - NFR-PERF-004 through NFR-PERF-008
 - FR-MOB-010
 - FR-CAMERA-003
