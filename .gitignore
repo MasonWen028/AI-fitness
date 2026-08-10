@@ -11,3 +11,11 @@ apps/mobile/.expo-shared
 apps/mobile/node_modules
 .agents/
 skills-lock.json
+.workbuddy/
+
+# Local device debug artifacts (adb logcat dumps, ad-hoc screen captures).
+# Evidence that must be retained belongs in docs/evidence/ instead.
+logcat.txt
+logcat-*.txt
+*.logcat
+m0c_screen.png
