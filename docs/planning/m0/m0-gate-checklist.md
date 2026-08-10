@@ -50,3 +50,14 @@ Any of the following occurs:
 ## Final Gate Rule
 
 `M0-GATE-001` is **binary**: the gate returns **FULL PASS** or **REQUEST CHANGES**. FULL PASS requires that the evidence package demonstrates the AI Exercise Analysis architecture is technically viable for Bodyweight Squat, that privacy/runtime constraints are respected, **and** that all mandatory M0 requirements are complete with ADR-005/012/016 accepted (with measurements) and M0-ENG-001–008 passing. A failing gate requires architecture revision, not exercise expansion.
+
+## Traceability Correction (R1, Item #19)
+
+The original `m0-gate-report.md` SRS traceability table referenced **`FR-BENCH-001 through FR-BENCH-004`**, which **do not exist in the SRS** (see `docs/reviews/M0-FINAL-ARCHITECTURE-EVIDENCE-REVIEW.md` F-HI-02). This is a documentation fabrication, corrected in R1:
+
+| Fabricated ID (historical) | Correct SRS requirement(s) |
+|----------------------------|----------------------------|
+| FR-BENCH-001 through 004 | FR-TRANSPORT-001 through FR-TRANSPORT-006; NFR-PERF-004 through NFR-PERF-008 |
+
+- All **live** planning/traceability now uses the correct SRS IDs (see `m0-remediation-plan.md` R1, Item #19).
+- The **historical** gate report retains its original FR-BENCH references under a superseded banner (`docs/architecture/evidence/m0/m0-gate-report.md`) — history is preserved, not rewritten.

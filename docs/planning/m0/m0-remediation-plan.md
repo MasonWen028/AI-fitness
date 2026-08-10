@@ -78,7 +78,7 @@ These are genuinely forward-looking, non-SRS-M0-mandatory items that can be defe
 |---|------|---------|--------|
 | 17 | Fix EBUSY prebuild instability | F-MD-05 | Windows filesystem lock on `expo prebuild --clean`. Tooling defect. |
 | 18 | Fix format gate on generated artifacts | F-MD-06 | Prettier scans `android/build` artifacts. CI hygiene. |
-| 19 | Correct gate report traceability | F-HI-02 | "FR-BENCH-001 through 004" don't exist in SRS. Documentation fabrication. |
+| 19 | Correct gate report traceability | F-HI-02 | "FR-BENCH-001 through 004" don't exist in SRS. Documentation fabrication. — **R1-corrected**: all live planning/traceability now references the real SRS IDs (FR-TRANSPORT-001–006, NFR-PERF-004–008). The historical gate report's FR-BENCH references are preserved with a superseded banner, not rewritten. |
 | 21 | Extract getEffectiveKneeAngle | F-LO-01 | Duplicated 3× in phaseMachine, repDetection, faults. DRY violation. |
 
 ---
