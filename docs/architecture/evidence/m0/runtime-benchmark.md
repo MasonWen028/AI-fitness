@@ -1,5 +1,9 @@
 # Runtime Benchmark Evidence
 
+> **⚠️ HISTORICAL RECORD — PRE-R1 BENCHMARK**
+>
+> This document captures benchmark-harness evidence prior to R1. Per `docs/reviews/M0-R0-REQUIREMENT-RECONCILIATION.md` (R0 CLOSED) and `docs/evidence/M0-R0-APPLIED.md`, ADR-016 runtime targets are pre-approved in R1 and ADR-016 acceptance occurs in R4 after R3 device evidence. Any measurement claims here are superseded by R4 acceptance.
+
 ## Source
 
 - Detailed evidence: `docs/evidence/M0-O.md`

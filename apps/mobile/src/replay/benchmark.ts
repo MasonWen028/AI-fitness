@@ -77,16 +77,22 @@ export function runReplayBenchmark(
         : updatePhase(createInitialPhaseState(normalized.timestampMs), metrics);
       repState = repState
         ? processPhaseUpdate(repState, phaseState, metrics)
-        : processPhaseUpdate(createInitialRepState(phaseState.phase), phaseState, metrics);
+        : processPhaseUpdate(
+            createInitialRepState(phaseState.phase),
+            phaseState,
+            metrics,
+          );
     }
-    const frameElapsed = (globalThis.performance?.now?.() ?? Date.now()) - frameStarted;
+    const frameElapsed =
+      (globalThis.performance?.now?.() ?? Date.now()) - frameStarted;
     totalProcessingMs += frameElapsed;
     peakProcessingMs = Math.max(peakProcessingMs, frameElapsed);
   }
 
   const framesTotal = observations.length;
   const framesDropped = Math.max(0, fixture.observations.length - framesTotal);
-  const averageProcessingMs = framesTotal > 0 ? totalProcessingMs / framesTotal : 0;
+  const averageProcessingMs =
+    framesTotal > 0 ? totalProcessingMs / framesTotal : 0;
   const completedRepCount = repState?.completedReps.length ?? 0;
   const incompleteRepCount = repState?.incompleteReps.length ?? 0;
 
@@ -151,15 +157,22 @@ function computeJsLoadScore(averageProcessingMs: number): number {
 function estimateMemoryFootprint(observations: PoseObservation[]): number {
   return observations.reduce((sum, observation) => {
     const landmarkCount = observation.people.reduce(
-      (count, person) => count + person.imageLandmarks.length + (person.worldLandmarks?.length ?? 0),
+      (count, person) =>
+        count +
+        person.imageLandmarks.length +
+        (person.worldLandmarks?.length ?? 0),
       0,
     );
     return sum + landmarkCount * 56;
   }, 0);
 }
 
-function measureTrackingRecovery(observations: PoseObservation[]): number | null {
-  const lossIndex = observations.findIndex((observation) => !observation.landmarksAvailable);
+function measureTrackingRecovery(
+  observations: PoseObservation[],
+): number | null {
+  const lossIndex = observations.findIndex(
+    (observation) => !observation.landmarksAvailable,
+  );
   if (lossIndex === -1) {
     return null;
   }
@@ -173,7 +186,9 @@ function measureTrackingRecovery(observations: PoseObservation[]): number | null
   return null;
 }
 
-function classifyThermalRisk(averageProcessingMs: number): 'low' | 'medium' | 'high' {
+function classifyThermalRisk(
+  averageProcessingMs: number,
+): 'low' | 'medium' | 'high' {
   if (averageProcessingMs < 4) {
     return 'low';
   }
@@ -183,7 +198,9 @@ function classifyThermalRisk(averageProcessingMs: number): 'low' | 'medium' | 'h
   return 'high';
 }
 
-function classifyBatteryProfile(averageProcessingMs: number): 'low' | 'medium' | 'high' {
+function classifyBatteryProfile(
+  averageProcessingMs: number,
+): 'low' | 'medium' | 'high' {
   if (averageProcessingMs < 3) {
     return 'low';
   }

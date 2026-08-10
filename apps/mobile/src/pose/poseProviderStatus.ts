@@ -48,7 +48,7 @@ export function getUnavailablePoseProviderStatus(
   return {
     isAvailable: false,
     providerName: 'mediapipe',
-    modelVersion: 'pose_landmarker_lite.task',
+    modelVersion: 'mediapipe-pose-landmarker-lite@1.0.0',
     delegate: 'UNKNOWN',
     isRunning: false,
     lastError:

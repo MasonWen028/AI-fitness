@@ -45,15 +45,15 @@ function makeDeepSquatPose(sequence: number, timestampMs = sequence * 33) {
   return createSyntheticObservation(
     sequence,
     {
-      nose: { x: 0.5, y: 0.30, visibility: 0.9 },
-      left_shoulder: { x: 0.40, y: 0.38, visibility: 0.9 },
-      right_shoulder: { x: 0.60, y: 0.38, visibility: 0.9 },
-      left_hip: { x: 0.42, y: 0.60, visibility: 0.9 },
-      right_hip: { x: 0.58, y: 0.60, visibility: 0.9 },
+      nose: { x: 0.5, y: 0.3, visibility: 0.9 },
+      left_shoulder: { x: 0.4, y: 0.38, visibility: 0.9 },
+      right_shoulder: { x: 0.6, y: 0.38, visibility: 0.9 },
+      left_hip: { x: 0.42, y: 0.6, visibility: 0.9 },
+      right_hip: { x: 0.58, y: 0.6, visibility: 0.9 },
       left_knee: { x: 0.38, y: 0.68, visibility: 0.9 },
       right_knee: { x: 0.62, y: 0.68, visibility: 0.9 },
-      left_ankle: { x: 0.43, y: 0.90, visibility: 0.9 },
-      right_ankle: { x: 0.57, y: 0.90, visibility: 0.9 },
+      left_ankle: { x: 0.43, y: 0.9, visibility: 0.9 },
+      right_ankle: { x: 0.57, y: 0.9, visibility: 0.9 },
     },
     { timestampMs },
   );
@@ -64,7 +64,7 @@ function makeLeaningPose(sequence: number, timestampMs = sequence * 33) {
   return createSyntheticObservation(
     sequence,
     {
-      nose: { x: 0.55, y: 0.20, visibility: 0.9 },
+      nose: { x: 0.55, y: 0.2, visibility: 0.9 },
       left_shoulder: { x: 0.48, y: 0.28, visibility: 0.9 },
       right_shoulder: { x: 0.62, y: 0.28, visibility: 0.9 },
       left_hip: { x: 0.43, y: 0.55, visibility: 0.9 },
@@ -322,8 +322,18 @@ describe('computeSquatMetrics', () => {
 
 describe('computeVelocity', () => {
   it('computes velocity from two valid metrics with monotonic timestamps', () => {
-    const prev: MetricValue = { value: 170, timestampMs: 1000, valid: true, minConfidence: 0.9 };
-    const curr: MetricValue = { value: 100, timestampMs: 1100, valid: true, minConfidence: 0.9 };
+    const prev: MetricValue = {
+      value: 170,
+      timestampMs: 1000,
+      valid: true,
+      minConfidence: 0.9,
+    };
+    const curr: MetricValue = {
+      value: 100,
+      timestampMs: 1100,
+      valid: true,
+      minConfidence: 0.9,
+    };
 
     const vel = computeVelocity(prev, curr);
 
@@ -334,8 +344,18 @@ describe('computeVelocity', () => {
   });
 
   it('rejects non-monotonic timestamps (curr <= prev)', () => {
-    const prev: MetricValue = { value: 170, timestampMs: 1100, valid: true, minConfidence: 0.9 };
-    const curr: MetricValue = { value: 100, timestampMs: 1000, valid: true, minConfidence: 0.9 };
+    const prev: MetricValue = {
+      value: 170,
+      timestampMs: 1100,
+      valid: true,
+      minConfidence: 0.9,
+    };
+    const curr: MetricValue = {
+      value: 100,
+      timestampMs: 1000,
+      valid: true,
+      minConfidence: 0.9,
+    };
 
     const vel = computeVelocity(prev, curr);
 
@@ -344,8 +364,18 @@ describe('computeVelocity', () => {
   });
 
   it('rejects equal timestamps (zero elapsed time)', () => {
-    const prev: MetricValue = { value: 170, timestampMs: 1000, valid: true, minConfidence: 0.9 };
-    const curr: MetricValue = { value: 100, timestampMs: 1000, valid: true, minConfidence: 0.9 };
+    const prev: MetricValue = {
+      value: 170,
+      timestampMs: 1000,
+      valid: true,
+      minConfidence: 0.9,
+    };
+    const curr: MetricValue = {
+      value: 100,
+      timestampMs: 1000,
+      valid: true,
+      minConfidence: 0.9,
+    };
 
     const vel = computeVelocity(prev, curr);
 
@@ -353,7 +383,12 @@ describe('computeVelocity', () => {
   });
 
   it('rejects implausibly large timestamp gaps', () => {
-    const prev: MetricValue = { value: 170, timestampMs: 1000, valid: true, minConfidence: 0.9 };
+    const prev: MetricValue = {
+      value: 170,
+      timestampMs: 1000,
+      valid: true,
+      minConfidence: 0.9,
+    };
     const curr: MetricValue = {
       value: 100,
       timestampMs: 1000 + MAX_VELOCITY_TIMESTAMP_GAP_MS + 1,
@@ -367,7 +402,12 @@ describe('computeVelocity', () => {
   });
 
   it('accepts gap at the boundary (exactly MAX_VELOCITY_TIMESTAMP_GAP_MS)', () => {
-    const prev: MetricValue = { value: 180, timestampMs: 0, valid: true, minConfidence: 0.9 };
+    const prev: MetricValue = {
+      value: 180,
+      timestampMs: 0,
+      valid: true,
+      minConfidence: 0.9,
+    };
     const curr: MetricValue = {
       value: 90,
       timestampMs: MAX_VELOCITY_TIMESTAMP_GAP_MS,
@@ -383,8 +423,18 @@ describe('computeVelocity', () => {
   });
 
   it('produces invalid velocity when either metric is invalid', () => {
-    const prev: MetricValue = { value: 170, timestampMs: 1000, valid: false, minConfidence: 0.3 };
-    const curr: MetricValue = { value: 100, timestampMs: 1100, valid: true, minConfidence: 0.9 };
+    const prev: MetricValue = {
+      value: 170,
+      timestampMs: 1000,
+      valid: false,
+      minConfidence: 0.3,
+    };
+    const curr: MetricValue = {
+      value: 100,
+      timestampMs: 1100,
+      valid: true,
+      minConfidence: 0.9,
+    };
 
     const vel = computeVelocity(prev, curr);
 
@@ -394,8 +444,12 @@ describe('computeVelocity', () => {
 
 describe('computeSquatVelocity', () => {
   it('computes velocity for all metrics from two consecutive frames', () => {
-    const prevMetrics = computeSquatMetrics(normalizeObservation(makeStandingPose(1, 1000))!);
-    const currMetrics = computeSquatMetrics(normalizeObservation(makeDeepSquatPose(2, 1100))!);
+    const prevMetrics = computeSquatMetrics(
+      normalizeObservation(makeStandingPose(1, 1000))!,
+    );
+    const currMetrics = computeSquatMetrics(
+      normalizeObservation(makeDeepSquatPose(2, 1100))!,
+    );
 
     const velocity = computeSquatVelocity(prevMetrics, currMetrics);
 
@@ -465,9 +519,15 @@ describe('computeRangeOverWindow', () => {
 
 describe('computeSquatROM', () => {
   it('computes ROM for all metrics over a window of frames', () => {
-    const standing = computeSquatMetrics(normalizeObservation(makeStandingPose(1, 0))!);
-    const deep = computeSquatMetrics(normalizeObservation(makeDeepSquatPose(2, 100))!);
-    const standing2 = computeSquatMetrics(normalizeObservation(makeStandingPose(3, 200))!);
+    const standing = computeSquatMetrics(
+      normalizeObservation(makeStandingPose(1, 0))!,
+    );
+    const deep = computeSquatMetrics(
+      normalizeObservation(makeDeepSquatPose(2, 100))!,
+    );
+    const standing2 = computeSquatMetrics(
+      normalizeObservation(makeStandingPose(3, 200))!,
+    );
 
     const rom = computeSquatROM([standing, deep, standing2]);
 
@@ -490,7 +550,9 @@ describe('computeSquatROM', () => {
 
 describe('getMetricById', () => {
   it('retrieves each metric by its ID', () => {
-    const metrics = computeSquatMetrics(normalizeObservation(makeStandingPose(1))!);
+    const metrics = computeSquatMetrics(
+      normalizeObservation(makeStandingPose(1))!,
+    );
 
     const ids: SquatMetricId[] = [
       'knee_angle_left',
@@ -509,13 +571,23 @@ describe('getMetricById', () => {
   });
 
   it('returns the correct metric for each ID', () => {
-    const metrics = computeSquatMetrics(normalizeObservation(makeStandingPose(1))!);
+    const metrics = computeSquatMetrics(
+      normalizeObservation(makeStandingPose(1))!,
+    );
 
-    expect(getMetricById(metrics, 'knee_angle_left')).toBe(metrics.kneeAngleLeft);
-    expect(getMetricById(metrics, 'knee_angle_right')).toBe(metrics.kneeAngleRight);
+    expect(getMetricById(metrics, 'knee_angle_left')).toBe(
+      metrics.kneeAngleLeft,
+    );
+    expect(getMetricById(metrics, 'knee_angle_right')).toBe(
+      metrics.kneeAngleRight,
+    );
     expect(getMetricById(metrics, 'hip_angle_left')).toBe(metrics.hipAngleLeft);
-    expect(getMetricById(metrics, 'hip_angle_right')).toBe(metrics.hipAngleRight);
-    expect(getMetricById(metrics, 'torso_inclination')).toBe(metrics.torsoInclination);
+    expect(getMetricById(metrics, 'hip_angle_right')).toBe(
+      metrics.hipAngleRight,
+    );
+    expect(getMetricById(metrics, 'torso_inclination')).toBe(
+      metrics.torsoInclination,
+    );
     expect(getMetricById(metrics, 'hip_depth')).toBe(metrics.hipDepth);
   });
 });

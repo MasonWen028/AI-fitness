@@ -22,7 +22,7 @@ describe('poseEventAdapters', () => {
       ],
       provider: {
         name: 'mediapipe',
-        modelVersion: 'pose_landmarker_lite.task',
+        modelVersion: 'mediapipe-pose-landmarker-lite@1.0.0',
         delegate: 'CPU',
         inferenceMs: 8,
       },
@@ -33,5 +33,27 @@ describe('poseEventAdapters', () => {
     expect(observation.landmarkCount).toBe(0);
     expect(observation.people[0].imageLandmarks).toEqual([]);
     expect(observation.rotationDegrees).toBe(90);
+  });
+
+  it('rejects invalid canonical rotation values instead of coercing them to portrait', () => {
+    expect(() =>
+      adaptNativePoseObservation({
+        sequence: 1,
+        timestampMs: 1000,
+        landmarksAvailable: false,
+        landmarkCount: 0,
+        frameId: 1,
+        imageSize: { width: 640, height: 480 },
+        rotationDegrees: 45,
+        mirrored: false,
+        people: [{ imageLandmarks: [], posePresence: 0 }],
+        provider: {
+          name: 'mediapipe',
+          modelVersion: 'mediapipe-pose-landmarker-lite@1.0.0',
+          delegate: 'CPU',
+          inferenceMs: 5,
+        },
+      }),
+    ).toThrow(/Invalid canonical rotationDegrees/i);
   });
 });

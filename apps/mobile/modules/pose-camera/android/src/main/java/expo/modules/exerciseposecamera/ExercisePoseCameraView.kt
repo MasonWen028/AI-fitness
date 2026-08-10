@@ -85,6 +85,7 @@ class ExercisePoseCameraView(
   var modelAssetPath: String = DEFAULT_MODEL_ASSET_PATH
   var delegateName: String = DEFAULT_DELEGATE_NAME
 
+  private var modelVersion: String = DEFAULT_MODEL_ASSET_PATH
   private var lastError: String? = null
   private var lastInferenceMs = 0L
   private var lastTimestampMs = 0L
@@ -167,7 +168,8 @@ class ExercisePoseCameraView(
     emitStatus()
 
     try {
-      val bundledModelPath = PoseCameraModelDownloader.ensureBundledModel(context, modelAssetPath)
+      val verifiedModel = PoseCameraModelDownloader.ensureBundledModel(context, modelAssetPath)
+      modelVersion = verifiedModel.modelVersion
       val delegate = when (delegateName.uppercase()) {
         "GPU" -> Delegate.GPU
         else -> Delegate.CPU
@@ -179,7 +181,7 @@ class ExercisePoseCameraView(
           .setBaseOptions(
             BaseOptions.builder()
               .setDelegate(delegate)
-              .setModelAssetPath(bundledModelPath)
+              .setModelAssetPath(verifiedModel.assetPath)
               .build(),
           )
           .setRunningMode(RunningMode.LIVE_STREAM)
@@ -287,7 +289,7 @@ class ExercisePoseCameraView(
 
     val localFrameId = framesReceived.get()
     val timestampMs = SystemClock.elapsedRealtime()
-    val rotationDegrees = normalizeRotation(imageProxy.imageInfo.rotationDegrees)
+    val rotationDegrees = requireCanonicalRotation(imageProxy.imageInfo.rotationDegrees)
 
     try {
       val bitmapBuffer = Bitmap.createBitmap(
@@ -390,7 +392,7 @@ class ExercisePoseCameraView(
         "people" to people,
         "provider" to mutableMapOf<String, Any?>(
           "name" to PROVIDER_NAME,
-          "modelVersion" to modelAssetPath,
+          "modelVersion" to modelVersion,
           "delegate" to delegateName.uppercase(),
           "inferenceMs" to lastInferenceMs.toDouble(),
         ),
@@ -442,11 +444,11 @@ class ExercisePoseCameraView(
     }
   }
 
-  private fun normalizeRotation(rotationDegrees: Int): Int {
+  private fun requireCanonicalRotation(rotationDegrees: Int): Int {
     val normalized = ((rotationDegrees % 360) + 360) % 360
     return when (normalized) {
-      90, 180, 270 -> normalized
-      else -> 0
+      0, 90, 180, 270 -> normalized
+      else -> throw IllegalArgumentException("Unsupported rotationDegrees: $rotationDegrees")
     }
   }
 
@@ -493,7 +495,7 @@ class ExercisePoseCameraView(
       mutableMapOf<String, Any?>(
         "isAvailable" to (cameraProvider != null || poseLandmarker != null),
         "providerName" to PROVIDER_NAME,
-        "modelVersion" to modelAssetPath,
+        "modelVersion" to modelVersion,
         "delegate" to if (poseLandmarker != null) delegateName.uppercase() else "UNKNOWN",
         "isRunning" to (cameraBound && previewStreamStateName == PreviewView.StreamState.STREAMING.name),
         "lastError" to lastError,

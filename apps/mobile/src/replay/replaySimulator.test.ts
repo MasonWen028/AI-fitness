@@ -45,7 +45,9 @@ describe('replay simulator', () => {
   it('plays remaining observations sequentially', () => {
     const simulator = createReplaySimulator(createFixtureForReplay());
 
-    const sequences = simulator.play().map((observation) => observation.sequence);
+    const sequences = simulator
+      .play()
+      .map((observation) => observation.sequence);
 
     expect(sequences).toEqual([0, 1, 2, 3]);
     expect(simulator.getSnapshot()).toMatchObject({
@@ -59,7 +61,9 @@ describe('replay simulator', () => {
   it('accelerates replay by skipping frames deterministically', () => {
     const simulator = createReplaySimulator(createFixtureForReplay());
 
-    const sequences = simulator.accelerate(2).map((observation) => observation.sequence);
+    const sequences = simulator
+      .accelerate(2)
+      .map((observation) => observation.sequence);
 
     expect(sequences).toEqual([0, 2]);
     expect(simulator.getSnapshot()).toMatchObject({
@@ -88,7 +92,9 @@ describe('replay simulator', () => {
   it('rejects non-positive accelerate step sizes', () => {
     const simulator = createReplaySimulator(createFixtureForReplay());
 
-    expect(() => simulator.accelerate(0)).toThrowError(/stepSize must be positive/);
+    expect(() => simulator.accelerate(0)).toThrowError(
+      /stepSize must be positive/,
+    );
   });
 
   it('repeated replay commands over the same fixture are deterministic', () => {

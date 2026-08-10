@@ -809,6 +809,8 @@ No other transition is permitted. A next set creates a new lifecycle instance; i
 | FR-AIFC-008 | State and transition analytics SHALL use allowlisted codes and SHALL not include image or landmark-stream payloads. |
 | FR-AIFC-009 | Tests SHALL cover every permitted transition and SHALL prove that every unspecified transition is rejected. |
 
+> **M0 scope (confirmed by M0-R0 reconciliation, 2026-08-10):** All FR-AIFC-001–009 are mandatory M0. The M0 implementation SHALL cover the full explicit lifecycle state model; any specific state deferred to a later milestone MUST be documented with explicit SRS/ADR rationale.
+
 ---
 
 ## 21. Pose Estimation System
@@ -882,9 +884,11 @@ flowchart LR
 | FR-POSE-004 | Inference SHALL execute off the UI/JS main thread and SHALL use a bounded latest-frame policy. |
 | FR-POSE-005 | Required landmarks below profile confidence for longer than the configured grace period SHALL set tracking state to `LOST` and suspend phase/rep advancement. |
 | FR-POSE-006 | The provider SHALL emit health counters for accepted/dropped frames, inference latency, tracking loss and model load failure without camera pixels. |
-| FR-POSE-007 | A provider replacement SHALL pass the canonical conformance fixture suite before release. |
+| FR-POSE-007a | The canonical conformance fixture suite SHALL exist for M0 and the active M0 pose provider SHALL pass it as part of M0 technical validation. |
+| FR-POSE-007b | Any provider replacement SHALL pass the canonical conformance fixture suite before production release. |
 | FR-POSE-008 | If the approved provider offers multiple model tiers, the app SHALL select only a device-validated tier and SHALL record that selection in analysis results. |
-| FR-POSE-009 | Model files SHALL be integrity checked, versioned and compatible with the signed application/profile manifest. |
+| FR-POSE-009a | Model files SHALL be versioned and integrity-checked against their profile manifest, failing safely to manual mode on mismatch. |
+| FR-POSE-009b | Model files SHALL be compatible with and verified against the signed application manifest at release. |
 
 ### 21.4 Degradation
 
@@ -2623,7 +2627,7 @@ The table below assigns every FR/NFR to its first mandatory milestone. A require
 | FR-MOB-001, 004–005, 007, 009–011 | M0 | ADR-012, ADR-016 | iOS/Android technical shell and physical-device tests |
 | FR-NORM-001–006 | M0 | ADR-007, ADR-016 | Translation/scale/mirror/noise fixtures |
 | FR-PHASE-001–005 | M0 | ADR-007 | Squat state-transition fixtures |
-| FR-POSE-001–009 | M0 | ADR-005, ADR-012, ADR-016 | Provider conformance, model/device benchmark |
+| FR-POSE-001–009 (FR-POSE-007/009 split by M0-R0: FR-POSE-007a/FR-POSE-009a M0; FR-POSE-007b/FR-POSE-009b M1) | M0 | ADR-005, ADR-012, ADR-016 | Provider conformance, model/device benchmark |
 | FR-PROFILE-001–002, 004 | M0 | ADR-007 | Schema/hash/compatibility/conformance tests |
 | FR-REP-001–003, 005 | M0 | ADR-007 | Complete/noise/incomplete/tracking-loss replay |
 | FR-RULE-001–004, 007 | M0 | ADR-007 | Determinism/schema/boundary/low-confidence fixtures |
@@ -2635,6 +2639,7 @@ The table below assigns every FR/NFR to its first mandatory milestone. A require
 | NFR-TEST-001 | M0 | ADR-007 | Rule/transition positive/negative/noise fixtures |
 | NFR-UX-008 | M0 | ADR-012 | Coaching-distance technical UI review |
 | FR-ANALYTICS-001–005 | M1 | ADR-009 | Minimum allowlist/schema/consent tests; M2 enriches |
+| FR-POSE-007b, FR-POSE-009b | M1 | ADR-005 | Provider replacement conformance / signed-manifest verification at release (split from FR-POSE-007/009 by M0-R0) |
 | FR-API-001–006, 009–010 | M1 | ADR-002, ADR-003, ADR-004 | Contract/authz/idempotency/integration tests |
 | FR-AUTH-001–007 | M1 | ADR-004 | Identity/session/ownership negative tests |
 | FR-CONTENT-001–002, 004–006 | M1 | ADR-011 | Licence gate, attribution and delivery tests |

@@ -38,9 +38,8 @@ export type LandmarkName = (typeof LANDMARK_NAMES)[number];
 
 export const LANDMARK_COUNT = LANDMARK_NAMES.length;
 
-export const LANDMARK_INDEX: Readonly<Record<string, number>> = Object.fromEntries(
-  LANDMARK_NAMES.map((name, index) => [name, index]),
-);
+export const LANDMARK_INDEX: Readonly<Record<string, number>> =
+  Object.fromEntries(LANDMARK_NAMES.map((name, index) => [name, index]));
 
 export function isLandmarkName(name: string): name is LandmarkName {
   return name in LANDMARK_INDEX;

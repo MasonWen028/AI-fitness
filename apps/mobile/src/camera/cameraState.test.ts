@@ -6,7 +6,7 @@ import {
   type CameraScreenState,
 } from './cameraState';
 
-function grantedState(): CameraScreenState {
+function grantedReadyToSetupState(): CameraScreenState {
   return reduceCameraScreenState(deriveInitialCameraState(), {
     type: 'permission_snapshot',
     snapshot: {
@@ -28,18 +28,19 @@ describe('cameraState', () => {
   });
 
   it('enables setup once permission is granted', () => {
-    expect(grantedState()).toMatchObject({
+    expect(grantedReadyToSetupState()).toMatchObject({
       permission: 'granted',
-      lifecycle: 'ready_to_setup',
+      lifecycle: 'READY_TO_SETUP',
       canShowPreview: false,
       canRequestPermission: false,
-      shouldShowManualFallback: false,
+      shouldShowManualFallback: true,
+      cause: 'supported_profile_available',
     });
   });
 
   it('does not mount preview merely because permission is granted', () => {
-    expect(grantedState()).toMatchObject({
-      lifecycle: 'ready_to_setup',
+    expect(grantedReadyToSetupState()).toMatchObject({
+      lifecycle: 'READY_TO_SETUP',
       canShowPreview: false,
     });
   });
@@ -56,9 +57,9 @@ describe('cameraState', () => {
       }),
     ).toMatchObject({
       permission: 'undetermined',
-      lifecycle: 'ready_to_setup',
+      lifecycle: 'READY_TO_SETUP',
       canRequestPermission: true,
-      shouldShowManualFallback: false,
+      shouldShowManualFallback: true,
     });
   });
 
@@ -74,92 +75,97 @@ describe('cameraState', () => {
       }),
     ).toMatchObject({
       permission: 'denied',
-      lifecycle: 'permission_denied',
+      lifecycle: 'MANUAL_FALLBACK',
       shouldShowManualFallback: true,
+      cause: 'permission_denied',
     });
   });
 
-  it('requires explicit preview start before preview becomes active', () => {
-    const readyToSetup = grantedState();
+  it('accepts every permitted lifecycle transition', () => {
+    const transitions = [
+      [
+        'READY_TO_SETUP',
+        { type: 'request_permission_started' },
+        'REQUESTING_PERMISSION',
+      ],
+      ['READY_TO_SETUP', { type: 'start_setup' }, 'POSITIONING'],
+      ['POSITIONING', { type: 'setup_quality_eligible' }, 'CALIBRATING'],
+      ['CALIBRATING', { type: 'calibration_passed' }, 'READY'],
+      [
+        'CALIBRATING',
+        { type: 'calibration_recoverable_failure' },
+        'POSITIONING',
+      ],
+      ['READY', { type: 'start_countdown' }, 'COUNTDOWN'],
+      ['COUNTDOWN', { type: 'countdown_completed' }, 'ACTIVE'],
+      ['COUNTDOWN', { type: 'countdown_paused' }, 'PAUSED'],
+      ['COUNTDOWN', { type: 'countdown_quality_lost' }, 'POSITIONING'],
+      ['ACTIVE', { type: 'tracking_lost' }, 'TRACKING_LOST'],
+      ['TRACKING_LOST', { type: 'tracking_reacquired' }, 'ACTIVE'],
+      ['ACTIVE', { type: 'pause_requested' }, 'PAUSED'],
+      ['TRACKING_LOST', { type: 'pause_requested' }, 'PAUSED'],
+      ['PAUSED', { type: 'resume_requested' }, 'COUNTDOWN'],
+      ['ACTIVE', { type: 'set_completed' }, 'SET_COMPLETE'],
+      ['TRACKING_LOST', { type: 'set_completed' }, 'SET_COMPLETE'],
+      ['PAUSED', { type: 'set_completed' }, 'SET_COMPLETE'],
+      ['ACTIVE', { type: 'technical_error' }, 'ERROR'],
+      ['TRACKING_LOST', { type: 'technical_error' }, 'ERROR'],
+      ['ERROR', { type: 'retry_setup' }, 'READY_TO_SETUP'],
+    ] as const;
 
-    expect(readyToSetup).toMatchObject({
-      lifecycle: 'ready_to_setup',
-      canShowPreview: false,
-    });
-
-    expect(
-      reduceCameraScreenState(readyToSetup, {
-        type: 'start_preview',
-      }),
-    ).toMatchObject({
-      lifecycle: 'preview_active',
-      canShowPreview: true,
-      shouldShowManualFallback: false,
-    });
-  });
-
-  it('ignores camera_ready until preview has already been activated', () => {
-    const readyToSetup = grantedState();
-
-    expect(
-      reduceCameraScreenState(readyToSetup, {
-        type: 'camera_ready',
-      }),
-    ).toEqual(readyToSetup);
-  });
-
-  it('preserves manual fallback on repeated granted permission snapshots', () => {
-    const manualFallback = reduceCameraScreenState(grantedState(), {
-      type: 'enter_manual_fallback',
-    });
-
-    expect(
-      reduceCameraScreenState(manualFallback, {
-        type: 'permission_snapshot',
-        snapshot: {
-          isLoading: false,
-          granted: true,
-          canAskAgain: false,
-        },
-      }),
-    ).toMatchObject({
+    const seedState = (
+      lifecycle: CameraScreenState['lifecycle'],
+    ): CameraScreenState => ({
       permission: 'granted',
-      lifecycle: 'manual_fallback',
+      lifecycle,
+      cause: 'supported_profile_available',
       canShowPreview: false,
+      canRequestPermission: false,
       shouldShowManualFallback: true,
+      statusMessage: '',
     });
+
+    for (const [from, event, expected] of transitions) {
+      const next = reduceCameraScreenState(seedState(from), event as never);
+      expect(next.lifecycle).toBe(expected);
+    }
   });
 
-  it('preserves preview interruption on repeated granted permission snapshots', () => {
-    const interrupted = reduceCameraScreenState(grantedState(), {
-      type: 'camera_interrupted',
-      reason: 'backgrounded',
-    });
-
-    expect(
-      reduceCameraScreenState(interrupted, {
-        type: 'permission_snapshot',
-        snapshot: {
-          isLoading: false,
-          granted: true,
-          canAskAgain: false,
-        },
-      }),
-    ).toMatchObject({
+  it('rejects unspecified lifecycle transitions', () => {
+    const paused = {
       permission: 'granted',
-      lifecycle: 'preview_interrupted',
+      lifecycle: 'PAUSED',
+      cause: 'lifecycle_interruption',
       canShowPreview: false,
+      canRequestPermission: false,
       shouldShowManualFallback: true,
-    });
+      statusMessage: '',
+    } satisfies CameraScreenState;
+
+    expect(
+      reduceCameraScreenState(paused, { type: 'countdown_completed' }),
+    ).toEqual(paused);
   });
 
-  it('exits active preview safely if permission is revoked but can still be requested', () => {
-    const activePreview = reduceCameraScreenState(grantedState(), {
-      type: 'start_preview',
+  it('returns to setup when active permission is revoked but request remains possible', () => {
+    const active = reduceCameraScreenState(
+      reduceCameraScreenState(
+        reduceCameraScreenState(
+          reduceCameraScreenState(grantedReadyToSetupState(), {
+            type: 'start_setup',
+          }),
+          { type: 'setup_quality_eligible' },
+        ),
+        { type: 'calibration_passed' },
+      ),
+      { type: 'start_countdown' },
+    );
+    const counting = reduceCameraScreenState(active, {
+      type: 'countdown_completed',
     });
 
     expect(
-      reduceCameraScreenState(activePreview, {
+      reduceCameraScreenState(counting, {
         type: 'permission_snapshot',
         snapshot: {
           isLoading: false,
@@ -169,58 +175,19 @@ describe('cameraState', () => {
       }),
     ).toMatchObject({
       permission: 'undetermined',
-      lifecycle: 'ready_to_setup',
+      lifecycle: 'READY_TO_SETUP',
       canShowPreview: false,
       canRequestPermission: true,
     });
   });
 
-  it('exits active preview safely if permission is revoked and cannot be requested again', () => {
-    const activePreview = reduceCameraScreenState(grantedState(), {
-      type: 'start_preview',
-    });
-
+  it('supports explicit manual fallback from setup states', () => {
     expect(
-      reduceCameraScreenState(activePreview, {
-        type: 'permission_snapshot',
-        snapshot: {
-          isLoading: false,
-          granted: false,
-          canAskAgain: false,
-        },
-      }),
-    ).toMatchObject({
-      permission: 'denied',
-      lifecycle: 'permission_denied',
-      canShowPreview: false,
-      shouldShowManualFallback: true,
-    });
-  });
-
-  it('moves to interruption state when the active preview is backgrounded', () => {
-    const activePreview = reduceCameraScreenState(grantedState(), {
-      type: 'start_preview',
-    });
-
-    expect(
-      reduceCameraScreenState(activePreview, {
-        type: 'camera_interrupted',
-        reason: 'backgrounded',
-      }),
-    ).toMatchObject({
-      lifecycle: 'preview_interrupted',
-      canShowPreview: false,
-      shouldShowManualFallback: true,
-    });
-  });
-
-  it('allows explicit manual fallback from any state', () => {
-    expect(
-      reduceCameraScreenState(grantedState(), {
+      reduceCameraScreenState(grantedReadyToSetupState(), {
         type: 'enter_manual_fallback',
       }),
     ).toMatchObject({
-      lifecycle: 'manual_fallback',
+      lifecycle: 'MANUAL_FALLBACK',
       canShowPreview: false,
       shouldShowManualFallback: true,
     });

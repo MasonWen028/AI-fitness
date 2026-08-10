@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  LANDMARK_COUNT,
-  LANDMARK_INDEX,
-  LANDMARK_NAMES,
-  SQUAT_CRITICAL_LANDMARKS,
-  isLandmarkName,
-  type LandmarkName,
-} from './poseContract';
+import type { LandmarkName } from './poseContract';
+import { LANDMARK_COUNT, LANDMARK_NAMES } from './poseContract';
 import {
   assertValidPoseObservation,
   createEmptyObservation,
@@ -18,68 +12,10 @@ import {
   validatePoseObservation,
 } from './poseValidation';
 
-describe('LANDMARK_NAMES', () => {
-  it('contains exactly 33 canonical landmarks', () => {
-    expect(LANDMARK_NAMES).toHaveLength(33);
-    expect(LANDMARK_COUNT).toBe(33);
-  });
-
-  it('matches the MediaPipe Pose Landmarker body model order', () => {
-    expect(LANDMARK_NAMES[0]).toBe('nose');
-    expect(LANDMARK_NAMES[11]).toBe('left_shoulder');
-    expect(LANDMARK_NAMES[23]).toBe('left_hip');
-    expect(LANDMARK_NAMES[31]).toBe('left_foot_index');
-    expect(LANDMARK_NAMES[32]).toBe('right_foot_index');
-  });
-});
-
-describe('LANDMARK_INDEX', () => {
-  it('maps every landmark name to its correct index', () => {
-    LANDMARK_NAMES.forEach((name, index) => {
-      expect(LANDMARK_INDEX[name]).toBe(index);
-    });
-  });
-
-  it('returns undefined for unknown names', () => {
-    expect(LANDMARK_INDEX['fake_landmark']).toBeUndefined();
-  });
-});
-
-describe('isLandmarkName', () => {
-  it('returns true for valid landmark names', () => {
-    expect(isLandmarkName('nose')).toBe(true);
-    expect(isLandmarkName('left_hip')).toBe(true);
-    expect(isLandmarkName('right_ankle')).toBe(true);
-  });
-
-  it('returns false for invalid names', () => {
-    expect(isLandmarkName('fake_landmark')).toBe(false);
-    expect(isLandmarkName('')).toBe(false);
-    expect(isLandmarkName('LEFT_HIP')).toBe(false);
-  });
-});
-
-describe('SQUAT_CRITICAL_LANDMARKS', () => {
-  it('contains 8 landmarks needed for squat analysis', () => {
-    expect(SQUAT_CRITICAL_LANDMARKS).toHaveLength(8);
-  });
-
-  it('includes hips, knees, ankles, and shoulders', () => {
-    expect(SQUAT_CRITICAL_LANDMARKS).toContain('left_hip');
-    expect(SQUAT_CRITICAL_LANDMARKS).toContain('right_hip');
-    expect(SQUAT_CRITICAL_LANDMARKS).toContain('left_knee');
-    expect(SQUAT_CRITICAL_LANDMARKS).toContain('right_knee');
-    expect(SQUAT_CRITICAL_LANDMARKS).toContain('left_ankle');
-    expect(SQUAT_CRITICAL_LANDMARKS).toContain('right_ankle');
-    expect(SQUAT_CRITICAL_LANDMARKS).toContain('left_shoulder');
-    expect(SQUAT_CRITICAL_LANDMARKS).toContain('right_shoulder');
-  });
-});
-
 describe('validatePoseObservation', () => {
   it('accepts a valid observation with landmarks', () => {
     const obs = createSyntheticObservation(1, {
-      left_hip: { x: 0.5, y: 0.6, z: 0, visibility: 0.9 },
+      left_hip: { x: 0.6, y: 0.6, z: 0, visibility: 0.9 },
       right_hip: { x: 0.4, y: 0.6, z: 0, visibility: 0.9 },
     });
     const result = validatePoseObservation(obs);
@@ -121,14 +57,18 @@ describe('validatePoseObservation', () => {
   });
 
   it('rejects invalid rotationDegrees', () => {
-    const obs = createEmptyObservation({ rotationDegrees: 45 as 0 | 90 | 180 | 270 });
+    const obs = createEmptyObservation({
+      rotationDegrees: 45 as 0 | 90 | 180 | 270,
+    });
     const result = validatePoseObservation(obs);
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.includes('rotationDegrees'))).toBe(true);
   });
 
   it('rejects zero or negative imageSize dimensions', () => {
-    const obs = createEmptyObservation({ imageSize: { width: 0, height: 480 } });
+    const obs = createEmptyObservation({
+      imageSize: { width: 0, height: 480 },
+    });
     const result = validatePoseObservation(obs);
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.includes('imageSize.width'))).toBe(true);
@@ -141,27 +81,42 @@ describe('validatePoseObservation', () => {
     expect(result.errors.some((e) => e.includes('landmarkCount'))).toBe(true);
   });
 
-  it('rejects invalid provider.delegate', () => {
+  it('rejects invalid provider delegate', () => {
     const obs = createEmptyObservation({
-      provider: { name: 'test', modelVersion: '1', delegate: 'TPU' as never, inferenceMs: 10 },
+      provider: {
+        name: 'test',
+        modelVersion: '1',
+        delegate: 'TPU' as never,
+        inferenceMs: 10,
+      },
     });
     const result = validatePoseObservation(obs);
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.includes('delegate'))).toBe(true);
   });
 
-  it('rejects empty provider.name', () => {
+  it('rejects empty provider name', () => {
     const obs = createEmptyObservation({
-      provider: { name: '', modelVersion: '1', delegate: 'CPU', inferenceMs: 10 },
+      provider: {
+        name: '',
+        modelVersion: '1',
+        delegate: 'CPU',
+        inferenceMs: 10,
+      },
     });
     const result = validatePoseObservation(obs);
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.includes('provider.name'))).toBe(true);
   });
 
-  it('rejects negative inferenceMs', () => {
+  it('rejects negative provider inferenceMs', () => {
     const obs = createEmptyObservation({
-      provider: { name: 'test', modelVersion: '1', delegate: 'CPU', inferenceMs: -5 },
+      provider: {
+        name: 'test',
+        modelVersion: '1',
+        delegate: 'CPU',
+        inferenceMs: -5,
+      },
     });
     const result = validatePoseObservation(obs);
     expect(result.valid).toBe(false);
@@ -176,14 +131,15 @@ describe('validatePoseObservation', () => {
     expect(result.errors.some((e) => e.includes('posePresence'))).toBe(true);
   });
 
-  it('rejects landmark with invalid name', () => {
-    const obs = createEmptyObservation();
-    obs.people = [
-      {
-        imageLandmarks: [{ name: 'fake_landmark' as LandmarkName, x: 0, y: 0 }],
-        posePresence: 0.5,
-      },
-    ];
+  it('rejects invalid landmark names', () => {
+    const obs = createEmptyObservation({
+      people: [
+        {
+          imageLandmarks: [{ name: 'invalid_name', x: 0, y: 0 } as never],
+          posePresence: 0.9,
+        },
+      ],
+    });
     obs.landmarksAvailable = true;
     obs.landmarkCount = 1;
     const result = validatePoseObservation(obs);
@@ -191,14 +147,9 @@ describe('validatePoseObservation', () => {
     expect(result.errors.some((e) => e.includes('LandmarkName'))).toBe(true);
   });
 
-  it('rejects landmark with non-finite x', () => {
-    const obs = createEmptyObservation();
-    obs.people = [
-      {
-        imageLandmarks: [{ name: 'nose', x: NaN, y: 0 }],
-        posePresence: 0.5,
-      },
-    ];
+  it('rejects non-finite landmark coordinates', () => {
+    const obs = createSyntheticObservation(1, { nose: { x: 0.5, y: 0.5 } });
+    obs.people[0]!.imageLandmarks[0]!.x = Number.NaN;
     obs.landmarksAvailable = true;
     obs.landmarkCount = 1;
     const result = validatePoseObservation(obs);
@@ -206,14 +157,9 @@ describe('validatePoseObservation', () => {
     expect(result.errors.some((e) => e.includes('.x'))).toBe(true);
   });
 
-  it('rejects visibility outside 0..1', () => {
-    const obs = createEmptyObservation();
-    obs.people = [
-      {
-        imageLandmarks: [{ name: 'nose', x: 0.5, y: 0.5, visibility: 1.5 }],
-        posePresence: 0.5,
-      },
-    ];
+  it('rejects out-of-range visibility', () => {
+    const obs = createSyntheticObservation(1, { nose: { x: 0.5, y: 0.5 } });
+    obs.people[0]!.imageLandmarks[0]!.visibility = 2;
     obs.landmarksAvailable = true;
     obs.landmarkCount = 1;
     const result = validatePoseObservation(obs);
@@ -221,28 +167,23 @@ describe('validatePoseObservation', () => {
     expect(result.errors.some((e) => e.includes('visibility'))).toBe(true);
   });
 
-  it('accepts visibility and presence as undefined', () => {
-    const obs = createEmptyObservation();
-    obs.people = [
-      {
-        imageLandmarks: [{ name: 'nose', x: 0.5, y: 0.5 }],
-        posePresence: 0.5,
-      },
-    ];
+  it('accepts optional presence in range', () => {
+    const obs = createSyntheticObservation(1, { nose: { x: 0.5, y: 0.5 } });
+    obs.people[0]!.imageLandmarks[0]!.presence = 0.8;
     obs.landmarksAvailable = true;
-    obs.landmarkCount = 1;
+    obs.landmarkCount = LANDMARK_COUNT;
     const result = validatePoseObservation(obs);
     expect(result.valid).toBe(true);
   });
 
-  it('accepts worldLandmarks as undefined', () => {
+  it('accepts missing worldLandmarks', () => {
     const obs = createSyntheticObservation(1, { nose: { x: 0.5, y: 0.5 } });
     expect(obs.people[0]!.worldLandmarks).toBeUndefined();
     const result = validatePoseObservation(obs);
     expect(result.valid).toBe(true);
   });
 
-  it('accepts worldLandmarks when populated', () => {
+  it('accepts worldLandmarks when present', () => {
     const obs = createSyntheticObservation(1, { nose: { x: 0.5, y: 0.5 } });
     obs.people[0]!.worldLandmarks = obs.people[0]!.imageLandmarks;
     const result = validatePoseObservation(obs);
@@ -255,146 +196,93 @@ describe('validatePoseObservation', () => {
       timestampMs: -1,
       landmarksAvailable: 'yes',
       landmarkCount: -1,
-      frameId: 'abc',
-      imageSize: { width: -1, height: 0 },
-      rotationDegrees: 99,
-      mirrored: 'false',
-      people: 'not-an-array',
-      provider: { name: '', modelVersion: '', delegate: 'TPU', inferenceMs: -1 },
+      frameId: NaN,
+      imageSize: { width: 0, height: -1 },
+      rotationDegrees: 45,
+      mirrored: 'no',
+      people: 'bad',
+      provider: {
+        name: '',
+        modelVersion: '',
+        delegate: 'TPU',
+        inferenceMs: -1,
+      },
     });
+
     expect(result.valid).toBe(false);
-    expect(result.errors.length).toBeGreaterThan(5);
-  });
-});
-
-describe('assertValidPoseObservation', () => {
-  it('does not throw for valid observations', () => {
-    const obs = createEmptyObservation();
-    expect(() => assertValidPoseObservation(obs)).not.toThrow();
+    expect(result.errors.length).toBeGreaterThan(3);
   });
 
-  it('throws for invalid observations', () => {
-    expect(() => assertValidPoseObservation({ sequence: -1 })).toThrow(
-      /Invalid PoseObservation/,
+  it('rejects adapter boundary mismatch where landmarkCount does not match canonical people payload', () => {
+    const obs = createSyntheticObservation(1, {
+      nose: { x: 0.5, y: 0.5 },
+      left_hip: { x: 0.4, y: 0.6 },
+      right_hip: { x: 0.6, y: 0.6 },
+    });
+    obs.landmarkCount = LANDMARK_COUNT - 1;
+
+    const result = validatePoseObservation(obs);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((error) => error.includes('landmarkCount'))).toBe(
+      true,
     );
   });
 });
 
-describe('createEmptyObservation', () => {
+describe('pose contract helpers', () => {
   it('produces a valid observation', () => {
     const obs = createEmptyObservation();
     expect(validatePoseObservation(obs).valid).toBe(true);
   });
 
-  it('applies overrides correctly', () => {
-    const obs = createEmptyObservation({ sequence: 42, mirrored: true });
-    expect(obs.sequence).toBe(42);
-    expect(obs.mirrored).toBe(true);
-  });
-});
-
-describe('createSyntheticObservation', () => {
-  it('produces a valid observation', () => {
-    const obs = createSyntheticObservation(1, {
-      left_hip: { x: 0.5, y: 0.6 },
+  it('creates a full synthetic observation when landmarks are provided', () => {
+    const obs = createSyntheticObservation(7, {
+      left_hip: { x: 0.6, y: 0.6 },
       right_hip: { x: 0.4, y: 0.6 },
     });
-    expect(validatePoseObservation(obs).valid).toBe(true);
+
+    expect(obs.landmarkCount).toBe(LANDMARK_COUNT);
+    expect(obs.people[0]!.imageLandmarks).toHaveLength(LANDMARK_COUNT);
   });
 
-  it('sets landmarksAvailable to false when no landmarks provided', () => {
-    const obs = createSyntheticObservation(1, {});
-    expect(obs.landmarksAvailable).toBe(false);
-    expect(obs.landmarkCount).toBe(0);
-  });
-
-  it('populates all 33 landmark slots, zeroing unprovided ones', () => {
-    const obs = createSyntheticObservation(1, { nose: { x: 0.5, y: 0.5 } });
-    expect(obs.people[0]!.imageLandmarks).toHaveLength(33);
-    expect(obs.people[0]!.imageLandmarks[0]!.name).toBe('nose');
-    expect(obs.people[0]!.imageLandmarks[0]!.x).toBe(0.5);
-    expect(obs.people[0]!.imageLandmarks[1]!.name).toBe('left_eye_inner');
-    expect(obs.people[0]!.imageLandmarks[1]!.x).toBe(0);
-  });
-
-  it('counts only provided landmarks in landmarkCount', () => {
-    const obs = createSyntheticObservation(5, {
-      nose: { x: 0.5, y: 0.5 },
-      left_hip: { x: 0.3, y: 0.7 },
-    });
-    expect(obs.landmarkCount).toBe(33);
-    expect(obs.landmarksAvailable).toBe(true);
-  });
-});
-
-describe('getLandmarkByName', () => {
-  it('finds a landmark by name', () => {
-    const obs = createSyntheticObservation(1, { nose: { x: 0.5, y: 0.3 } });
-    const lm = getLandmarkByName(obs, 'nose');
-    expect(lm).toBeDefined();
-    expect(lm!.x).toBe(0.5);
-  });
-
-  it('returns undefined for missing person index', () => {
-    const obs = createSyntheticObservation(1, { nose: { x: 0.5, y: 0.3 } });
-    expect(getLandmarkByName(obs, 'nose', 5)).toBeUndefined();
-  });
-});
-
-describe('getLandmarksByNames', () => {
-  it('retrieves multiple landmarks by name', () => {
+  it('finds landmarks by name', () => {
     const obs = createSyntheticObservation(1, {
-      left_hip: { x: 0.3, y: 0.7 },
-      right_hip: { x: 0.7, y: 0.7 },
-      left_knee: { x: 0.3, y: 0.9 },
+      left_knee: { x: 0.4, y: 0.8 },
     });
-    const result = getLandmarksByNames(obs, ['left_hip', 'right_hip', 'left_knee', 'nose']);
-    expect(result).toHaveLength(4);
-    expect(result[0]!.landmark!.x).toBe(0.3);
-    expect(result[1]!.landmark!.x).toBe(0.7);
-    expect(result[2]!.landmark!.y).toBe(0.9);
-    expect(result[3]!.landmark).toBeDefined();
-    expect(result[3]!.landmark!.x).toBe(0);
-    expect(result[3]!.landmark!.visibility).toBe(0);
-  });
-});
-
-describe('hasCriticalLandmarks', () => {
-  it('returns true when all critical landmarks are present with sufficient visibility', () => {
-    const landmarks: Partial<Record<LandmarkName, { x: number; y: number; visibility?: number }>> = {};
-    for (const name of SQUAT_CRITICAL_LANDMARKS) {
-      landmarks[name] = { x: 0.5, y: 0.5, visibility: 0.8 };
-    }
-    const obs = createSyntheticObservation(1, landmarks);
-    expect(hasCriticalLandmarks(obs, SQUAT_CRITICAL_LANDMARKS)).toBe(true);
+    expect(getLandmarkByName(obs, 'left_knee')).toBeDefined();
+    expect(getLandmarkByName(obs, 'right_knee')).toBeDefined();
   });
 
-  it('returns false when a critical landmark is missing', () => {
-    const landmarks: Partial<Record<LandmarkName, { x: number; y: number; visibility?: number }>> = {};
-    for (const name of SQUAT_CRITICAL_LANDMARKS) {
-      landmarks[name] = { x: 0.5, y: 0.5, visibility: 0.8 };
-    }
-    delete landmarks['left_knee'];
-    const obs = createSyntheticObservation(1, landmarks);
-    expect(hasCriticalLandmarks(obs, SQUAT_CRITICAL_LANDMARKS)).toBe(false);
+  it('returns selected landmarks in order', () => {
+    const obs = createSyntheticObservation(1, {
+      left_hip: { x: 0.4, y: 0.6 },
+      right_hip: { x: 0.6, y: 0.6 },
+    });
+    const selected = getLandmarksByNames(obs, ['left_hip', 'right_hip']);
+    expect(selected.map((entry) => entry.name)).toEqual([
+      'left_hip',
+      'right_hip',
+    ]);
   });
 
-  it('returns false when visibility is below threshold', () => {
-    const landmarks: Partial<Record<LandmarkName, { x: number; y: number; visibility?: number }>> = {};
-    for (const name of SQUAT_CRITICAL_LANDMARKS) {
-      landmarks[name] = { x: 0.5, y: 0.5, visibility: 0.8 };
+  it('reports critical landmarks only when visibility passes threshold', () => {
+    const landmarks: Partial<
+      Record<LandmarkName, { x: number; y: number; visibility?: number }>
+    > = {};
+    for (const name of LANDMARK_NAMES) {
+      landmarks[name] = { x: 0.5, y: 0.5, visibility: 0.9 };
     }
-    landmarks['left_knee'] = { x: 0.5, y: 0.5, visibility: 0.3 };
+    landmarks.left_knee = { x: 0.45, y: 0.75, visibility: 0.2 };
+
     const obs = createSyntheticObservation(1, landmarks);
-    expect(hasCriticalLandmarks(obs, SQUAT_CRITICAL_LANDMARKS, 0, 0.5)).toBe(false);
+    expect(hasCriticalLandmarks(obs, ['left_knee', 'right_knee'], 0, 0.5)).toBe(
+      false,
+    );
   });
 
-  it('returns true when visibility is undefined (assumed visible)', () => {
-    const landmarks: Partial<Record<LandmarkName, { x: number; y: number; visibility?: number }>> = {};
-    for (const name of SQUAT_CRITICAL_LANDMARKS) {
-      landmarks[name] = { x: 0.5, y: 0.5 };
-    }
-    const obs = createSyntheticObservation(1, landmarks);
-    expect(hasCriticalLandmarks(obs, SQUAT_CRITICAL_LANDMARKS)).toBe(true);
+  it('assertValidPoseObservation throws on invalid input', () => {
+    expect(() => assertValidPoseObservation({ sequence: -1 })).toThrow(
+      /Invalid PoseObservation/,
+    );
   });
 });

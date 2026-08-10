@@ -1,4 +1,5 @@
 import type { PoseObservation } from './poseContract';
+import { VALID_ROTATIONS } from './poseContract';
 import type { PoseProviderStatus } from './poseProviderStatus';
 
 type NativeLandmark = {
@@ -6,8 +7,8 @@ type NativeLandmark = {
   x: number;
   y: number;
   z?: number;
-  visibility?: number | null;
-  presence?: number | null;
+  visibility?: number;
+  presence?: number;
 };
 
 type NativeObservation = {
@@ -85,11 +86,13 @@ export function adaptNativePoseProviderStatus(
 
 function normalizeRotation(rotationDegrees: number): 0 | 90 | 180 | 270 {
   const normalized = ((rotationDegrees % 360) + 360) % 360;
-  if (normalized === 90 || normalized === 180 || normalized === 270) {
-    return normalized;
+  if (VALID_ROTATIONS.includes(normalized as 0 | 90 | 180 | 270)) {
+    return normalized as 0 | 90 | 180 | 270;
   }
 
-  return 0;
+  throw new Error(
+    `Invalid canonical rotationDegrees ${rotationDegrees}. Expected one of ${VALID_ROTATIONS.join(', ')}.`,
+  );
 }
 
 function normalizeDelegate(delegate: string): PoseProviderStatus['delegate'] {

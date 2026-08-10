@@ -30,9 +30,7 @@ function makeMetric(
   };
 }
 
-function makeMetrics(
-  overrides: Partial<SquatMetrics> = {},
-): SquatMetrics {
+function makeMetrics(overrides: Partial<SquatMetrics> = {}): SquatMetrics {
   const defaultMetric = makeMetric(170);
   return {
     kneeAngleLeft: defaultMetric,
@@ -130,10 +128,12 @@ describe('evaluateInsufficientDepth', () => {
         kneeAngleLeft: makeMetric(150),
         kneeAngleRight: makeMetric(150),
       });
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: metrics.kneeAngleLeft,
-        kneeAngleRight: metrics.kneeAngleRight,
-      }));
+      const result = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {
+          kneeAngleLeft: metrics.kneeAngleLeft,
+          kneeAngleRight: metrics.kneeAngleRight,
+        }),
+      );
       expect(result).not.toBeNull();
       expect(result!.status).toBe('DETECTED');
       expect(result!.value).toBe(150);
@@ -142,45 +142,55 @@ describe('evaluateInsufficientDepth', () => {
 
     it('does not detect when knee angle is below threshold', () => {
       // Knee angle = 100° (deep squat) → NOT_OBSERVABLE (no fault)
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: makeMetric(100),
-        kneeAngleRight: makeMetric(100),
-      }));
+      const result = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {
+          kneeAngleLeft: makeMetric(100),
+          kneeAngleRight: makeMetric(100),
+        }),
+      );
       expect(result).not.toBeNull();
       expect(result!.status).toBe('NOT_OBSERVABLE');
     });
 
     it('detects at exact threshold boundary (>)', () => {
       // Knee angle = 140° exactly → NOT_OBSERVABLE (not > threshold)
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: makeMetric(140),
-        kneeAngleRight: makeMetric(140),
-      }));
+      const result = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {
+          kneeAngleLeft: makeMetric(140),
+          kneeAngleRight: makeMetric(140),
+        }),
+      );
       expect(result!.status).toBe('NOT_OBSERVABLE');
 
       // Knee angle = 140.001 → DETECTED
-      const result2 = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: makeMetric(140.001),
-        kneeAngleRight: makeMetric(140.001),
-      }));
+      const result2 = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {
+          kneeAngleLeft: makeMetric(140.001),
+          kneeAngleRight: makeMetric(140.001),
+        }),
+      );
       expect(result2!.status).toBe('DETECTED');
     });
 
     it('uses average of left and right when both valid', () => {
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: makeMetric(130),
-        kneeAngleRight: makeMetric(150),
-      }));
+      const result = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {
+          kneeAngleLeft: makeMetric(130),
+          kneeAngleRight: makeMetric(150),
+        }),
+      );
       // Average = 140, not > 140, so NOT_OBSERVABLE
       expect(result!.value).toBe(140);
       expect(result!.status).toBe('NOT_OBSERVABLE');
     });
 
     it('uses only valid side when one is invalid', () => {
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: makeMetric(150, { valid: true }),
-        kneeAngleRight: makeMetric(0, { valid: false }),
-      }));
+      const result = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {
+          kneeAngleLeft: makeMetric(150, { valid: true }),
+          kneeAngleRight: makeMetric(0, { valid: false }),
+        }),
+      );
       expect(result!.value).toBe(150);
       expect(result!.status).toBe('DETECTED');
     });
@@ -188,28 +198,34 @@ describe('evaluateInsufficientDepth', () => {
 
   describe('fail closed (FR-RULE-004)', () => {
     it('returns NOT_OBSERVABLE when knee angle is invalid', () => {
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: makeMetric(0, { valid: false }),
-        kneeAngleRight: makeMetric(0, { valid: false }),
-      }));
+      const result = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {
+          kneeAngleLeft: makeMetric(0, { valid: false }),
+          kneeAngleRight: makeMetric(0, { valid: false }),
+        }),
+      );
       expect(result!.status).toBe('NOT_OBSERVABLE');
     });
 
     it('returns NOT_OBSERVABLE when confidence below minimum', () => {
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: makeMetric(150, { minConfidence: 0.3 }),
-        kneeAngleRight: makeMetric(150, { minConfidence: 0.3 }),
-      }));
+      const result = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {
+          kneeAngleLeft: makeMetric(150, { minConfidence: 0.3 }),
+          kneeAngleRight: makeMetric(150, { minConfidence: 0.3 }),
+        }),
+      );
       // Default minConfidence = 0.5, metric confidence = 0.3
       expect(result!.status).toBe('NOT_OBSERVABLE');
     });
 
     it('returns NOT_OBSERVABLE when one side low confidence even if value high', () => {
       // Even if the effective angle would exceed threshold, low confidence fails closed
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: makeMetric(150, { minConfidence: 0.3 }),
-        kneeAngleRight: makeMetric(150, { valid: false }),
-      }));
+      const result = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {
+          kneeAngleLeft: makeMetric(150, { minConfidence: 0.3 }),
+          kneeAngleRight: makeMetric(150, { valid: false }),
+        }),
+      );
       // Only left is valid but confidence = 0.3 < 0.5
       expect(result!.status).toBe('NOT_OBSERVABLE');
     });
@@ -227,10 +243,16 @@ describe('evaluateInsufficientDepth', () => {
           kneeAngleValues: [],
         },
       });
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {
-        kneeAngleLeft: makeMetric(150, { minConfidence: 0.7 }),
-        kneeAngleRight: makeMetric(150, { minConfidence: 0.9 }),
-      }, repState));
+      const result = evaluateInsufficientDepth(
+        makeContext(
+          'BOTTOM',
+          {
+            kneeAngleLeft: makeMetric(150, { minConfidence: 0.7 }),
+            kneeAngleRight: makeMetric(150, { minConfidence: 0.9 }),
+          },
+          repState,
+        ),
+      );
       expect(result).not.toBeNull();
       expect(result!.code).toBe('INSUFFICIENT_DEPTH');
       expect(result!.status).toBe('DETECTED');
@@ -238,7 +260,10 @@ describe('evaluateInsufficientDepth', () => {
       expect(result!.confidence).toBe(0.7); // min of 0.7 and 0.9
       expect(result!.phase).toBe('BOTTOM');
       expect(result!.repIndex).toBe(0);
-      expect(result!.evidenceMetricIds).toEqual(['knee_angle_left', 'knee_angle_right']);
+      expect(result!.evidenceMetricIds).toEqual([
+        'knee_angle_left',
+        'knee_angle_right',
+      ]);
       expect(result!.ruleVersion).toBe(DEFAULT_FAULT_CONFIG.ruleVersion);
       expect(result!.timestampMs).toBe(1000);
       expect(result!.value).toBe(150);
@@ -265,30 +290,40 @@ describe('evaluateInsufficientDepth', () => {
           kneeAngleValues: [],
         },
       });
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {}, {
-        currentAttempt: repState.currentAttempt,
-      }));
+      const result = evaluateInsufficientDepth(
+        makeContext(
+          'BOTTOM',
+          {},
+          {
+            currentAttempt: repState.currentAttempt,
+          },
+        ),
+      );
       expect(result!.repIndex).toBe(0);
     });
 
     it('returns last completed repIndex when no current attempt', () => {
       const repState = makeRepState({
-        completedReps: [{
-          status: 'completed',
-          startTimestampMs: 0,
-          endTimestampMs: 500,
-          durationMs: 500,
-          kneeAngleRom: 60,
-          minConfidence: 0.8,
-          averageConfidence: 0.8,
-          issues: [],
-          engineVersion: 'm0-engine-0.1.0',
-          profileVersion: 'm0-squat-candidate-0.1.0',
-          ruleVersion: 'm0-squat-rules-0.1.0',
-        }],
+        completedReps: [
+          {
+            status: 'completed',
+            startTimestampMs: 0,
+            endTimestampMs: 500,
+            durationMs: 500,
+            kneeAngleRom: 60,
+            minConfidence: 0.8,
+            averageConfidence: 0.8,
+            issues: [],
+            engineVersion: 'm0-engine-0.1.0',
+            profileVersion: 'm0-squat-candidate-0.1.0',
+            ruleVersion: 'm0-squat-rules-0.1.0',
+          },
+        ],
         currentAttempt: null,
       });
-      const result = evaluateInsufficientDepth(makeContext('BOTTOM', {}, repState));
+      const result = evaluateInsufficientDepth(
+        makeContext('BOTTOM', {}, repState),
+      );
       expect(result!.repIndex).toBe(0);
     });
   });
@@ -305,10 +340,15 @@ describe('evaluateInsufficientDepth', () => {
       };
       // Knee angle = 130, threshold = 120 → DETECTED
       const result = evaluateInsufficientDepth(
-        makeContext('BOTTOM', {
-          kneeAngleLeft: makeMetric(130),
-          kneeAngleRight: makeMetric(130),
-        }, {}, config),
+        makeContext(
+          'BOTTOM',
+          {
+            kneeAngleLeft: makeMetric(130),
+            kneeAngleRight: makeMetric(130),
+          },
+          {},
+          config,
+        ),
       );
       expect(result!.status).toBe('DETECTED');
       expect(result!.threshold).toBe(120);
@@ -325,10 +365,15 @@ describe('evaluateInsufficientDepth', () => {
       };
       // Confidence = 0.7, minConfidence = 0.9 → NOT_OBSERVABLE
       const result = evaluateInsufficientDepth(
-        makeContext('BOTTOM', {
-          kneeAngleLeft: makeMetric(150, { minConfidence: 0.7 }),
-          kneeAngleRight: makeMetric(150, { minConfidence: 0.7 }),
-        }, {}, config),
+        makeContext(
+          'BOTTOM',
+          {
+            kneeAngleLeft: makeMetric(150, { minConfidence: 0.7 }),
+            kneeAngleRight: makeMetric(150, { minConfidence: 0.7 }),
+          },
+          {},
+          config,
+        ),
       );
       expect(result!.status).toBe('NOT_OBSERVABLE');
     });
@@ -378,57 +423,71 @@ describe('evaluateExcessiveForwardLean', () => {
   describe('detection logic', () => {
     it('detects when torso inclination exceeds threshold', () => {
       // Default threshold = 45°, inclination = 50° → DETECTED
-      const result = evaluateExcessiveForwardLean(makeContext('DESCENDING', {
-        torsoInclination: makeMetric(50),
-      }));
+      const result = evaluateExcessiveForwardLean(
+        makeContext('DESCENDING', {
+          torsoInclination: makeMetric(50),
+        }),
+      );
       expect(result!.status).toBe('DETECTED');
       expect(result!.value).toBe(50);
       expect(result!.threshold).toBe(45);
     });
 
     it('does not detect when torso inclination is below threshold', () => {
-      const result = evaluateExcessiveForwardLean(makeContext('DESCENDING', {
-        torsoInclination: makeMetric(30),
-      }));
+      const result = evaluateExcessiveForwardLean(
+        makeContext('DESCENDING', {
+          torsoInclination: makeMetric(30),
+        }),
+      );
       expect(result!.status).toBe('NOT_OBSERVABLE');
     });
 
     it('detects at exact threshold boundary (>)', () => {
       // Exactly 45° → NOT_OBSERVABLE (not > 45)
-      const result = evaluateExcessiveForwardLean(makeContext('BOTTOM', {
-        torsoInclination: makeMetric(45),
-      }));
+      const result = evaluateExcessiveForwardLean(
+        makeContext('BOTTOM', {
+          torsoInclination: makeMetric(45),
+        }),
+      );
       expect(result!.status).toBe('NOT_OBSERVABLE');
 
       // 45.001° → DETECTED
-      const result2 = evaluateExcessiveForwardLean(makeContext('BOTTOM', {
-        torsoInclination: makeMetric(45.001),
-      }));
+      const result2 = evaluateExcessiveForwardLean(
+        makeContext('BOTTOM', {
+          torsoInclination: makeMetric(45.001),
+        }),
+      );
       expect(result2!.status).toBe('DETECTED');
     });
   });
 
   describe('fail closed (FR-RULE-004)', () => {
     it('returns NOT_OBSERVABLE when torso inclination is invalid', () => {
-      const result = evaluateExcessiveForwardLean(makeContext('DESCENDING', {
-        torsoInclination: makeMetric(50, { valid: false }),
-      }));
+      const result = evaluateExcessiveForwardLean(
+        makeContext('DESCENDING', {
+          torsoInclination: makeMetric(50, { valid: false }),
+        }),
+      );
       expect(result!.status).toBe('NOT_OBSERVABLE');
     });
 
     it('returns NOT_OBSERVABLE when confidence below minimum', () => {
-      const result = evaluateExcessiveForwardLean(makeContext('DESCENDING', {
-        torsoInclination: makeMetric(50, { minConfidence: 0.3 }),
-      }));
+      const result = evaluateExcessiveForwardLean(
+        makeContext('DESCENDING', {
+          torsoInclination: makeMetric(50, { minConfidence: 0.3 }),
+        }),
+      );
       expect(result!.status).toBe('NOT_OBSERVABLE');
     });
   });
 
   describe('result fields (FR-RULE-003)', () => {
     it('includes all required fields in detected fault', () => {
-      const result = evaluateExcessiveForwardLean(makeContext('BOTTOM', {
-        torsoInclination: makeMetric(55, { minConfidence: 0.75 }),
-      }));
+      const result = evaluateExcessiveForwardLean(
+        makeContext('BOTTOM', {
+          torsoInclination: makeMetric(55, { minConfidence: 0.75 }),
+        }),
+      );
       expect(result).not.toBeNull();
       expect(result!.code).toBe('EXCESSIVE_FORWARD_LEAN');
       expect(result!.status).toBe('DETECTED');
@@ -455,9 +514,14 @@ describe('evaluateExcessiveForwardLean', () => {
       };
       // Inclination = 35, threshold = 30 → DETECTED
       const result = evaluateExcessiveForwardLean(
-        makeContext('DESCENDING', {
-          torsoInclination: makeMetric(35),
-        }, {}, config),
+        makeContext(
+          'DESCENDING',
+          {
+            torsoInclination: makeMetric(35),
+          },
+          {},
+          config,
+        ),
       );
       expect(result!.status).toBe('DETECTED');
       expect(result!.threshold).toBe(30);

@@ -6,7 +6,7 @@ import {
 } from './cameraState';
 
 describe('CameraPreviewScreen lifecycle integration seam', () => {
-  it('does not reach preview_active before explicit start', () => {
+  it('does not reach ACTIVE or preview enablement before explicit setup flow', () => {
     const granted = reduceCameraScreenState(deriveInitialCameraState(), {
       type: 'permission_snapshot',
       snapshot: {
@@ -16,7 +16,7 @@ describe('CameraPreviewScreen lifecycle integration seam', () => {
       },
     });
 
-    expect(granted.lifecycle).toBe('ready_to_setup');
+    expect(granted.lifecycle).toBe('READY_TO_SETUP');
     expect(granted.canShowPreview).toBe(false);
   });
 });

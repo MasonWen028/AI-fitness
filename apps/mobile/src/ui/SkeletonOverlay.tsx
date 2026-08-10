@@ -42,7 +42,12 @@ export function SkeletonOverlay({
     return null;
   }
 
-  const segments = buildSkeletonSegments(observation, width, height, personIndex);
+  const segments = buildSkeletonSegments(
+    observation,
+    width,
+    height,
+    personIndex,
+  );
   const joints = buildSkeletonJoints(observation, width, height, personIndex);
 
   return (

@@ -39,7 +39,10 @@ export function validatePoseObservation(obs: unknown): ValidationResult {
     errors.push('landmarksAvailable must be boolean');
   }
 
-  if (typeof o.landmarkCount !== 'number' || !Number.isFinite(o.landmarkCount)) {
+  if (
+    typeof o.landmarkCount !== 'number' ||
+    !Number.isFinite(o.landmarkCount)
+  ) {
     errors.push('landmarkCount must be a finite number');
   } else if (o.landmarkCount < 0 || o.landmarkCount > LANDMARK_COUNT) {
     errors.push(`landmarkCount must be in range 0..${LANDMARK_COUNT}`);
@@ -84,13 +87,21 @@ export function validatePoseObservation(obs: unknown): ValidationResult {
     if (typeof provider.name !== 'string' || provider.name.length === 0) {
       errors.push('provider.name must be a non-empty string');
     }
-    if (typeof provider.modelVersion !== 'string' || provider.modelVersion.length === 0) {
+    if (
+      typeof provider.modelVersion !== 'string' ||
+      provider.modelVersion.length === 0
+    ) {
       errors.push('provider.modelVersion must be a non-empty string');
     }
     if (!VALID_DELEGATES.includes(provider.delegate as PoseDelegate)) {
-      errors.push(`provider.delegate must be one of ${VALID_DELEGATES.join(', ')}`);
+      errors.push(
+        `provider.delegate must be one of ${VALID_DELEGATES.join(', ')}`,
+      );
     }
-    if (typeof provider.inferenceMs !== 'number' || !Number.isFinite(provider.inferenceMs)) {
+    if (
+      typeof provider.inferenceMs !== 'number' ||
+      !Number.isFinite(provider.inferenceMs)
+    ) {
       errors.push('provider.inferenceMs must be a finite number');
     } else if (provider.inferenceMs < 0) {
       errors.push('provider.inferenceMs must be non-negative');
@@ -98,10 +109,9 @@ export function validatePoseObservation(obs: unknown): ValidationResult {
   }
 
   if (typeof o.landmarkCount === 'number' && Array.isArray(o.people)) {
-    const actualCount = (o.people as Array<{ imageLandmarks?: unknown[] }>).reduce(
-      (max, p) => Math.max(max, p.imageLandmarks?.length ?? 0),
-      0,
-    );
+    const actualCount = (
+      o.people as Array<{ imageLandmarks?: unknown[] }>
+    ).reduce((max, p) => Math.max(max, p.imageLandmarks?.length ?? 0), 0);
     if (o.landmarkCount !== actualCount && o.landmarksAvailable === true) {
       errors.push(
         `landmarkCount (${o.landmarkCount}) does not match max imageLandmarks length (${actualCount}) when landmarksAvailable is true`,
@@ -119,7 +129,10 @@ function validatePerson(
 ): void {
   const prefix = `people[${index}]`;
 
-  if (person.trackingId !== undefined && typeof person.trackingId !== 'string') {
+  if (
+    person.trackingId !== undefined &&
+    typeof person.trackingId !== 'string'
+  ) {
     errors.push(`${prefix}.trackingId must be string or undefined`);
   }
 
@@ -127,7 +140,11 @@ function validatePerson(
     errors.push(`${prefix}.imageLandmarks must be an array`);
   } else {
     person.imageLandmarks.forEach((lm, j) => {
-      validateLandmark(lm as Record<string, unknown>, `${prefix}.imageLandmarks[${j}]`, errors);
+      validateLandmark(
+        lm as Record<string, unknown>,
+        `${prefix}.imageLandmarks[${j}]`,
+        errors,
+      );
     });
   }
 
@@ -136,12 +153,19 @@ function validatePerson(
       errors.push(`${prefix}.worldLandmarks must be an array or undefined`);
     } else {
       person.worldLandmarks.forEach((lm, j) => {
-        validateLandmark(lm as Record<string, unknown>, `${prefix}.worldLandmarks[${j}]`, errors);
+        validateLandmark(
+          lm as Record<string, unknown>,
+          `${prefix}.worldLandmarks[${j}]`,
+          errors,
+        );
       });
     }
   }
 
-  if (typeof person.posePresence !== 'number' || !Number.isFinite(person.posePresence)) {
+  if (
+    typeof person.posePresence !== 'number' ||
+    !Number.isFinite(person.posePresence)
+  ) {
     errors.push(`${prefix}.posePresence must be a finite number`);
   } else if (person.posePresence < 0 || person.posePresence > 1) {
     errors.push(`${prefix}.posePresence must be in range 0..1`);
@@ -164,7 +188,10 @@ function validateLandmark(
   if (typeof lm.y !== 'number' || !Number.isFinite(lm.y)) {
     errors.push(`${prefix}.y must be a finite number`);
   }
-  if (lm.z !== undefined && (typeof lm.z !== 'number' || !Number.isFinite(lm.z))) {
+  if (
+    lm.z !== undefined &&
+    (typeof lm.z !== 'number' || !Number.isFinite(lm.z))
+  ) {
     errors.push(`${prefix}.z must be a finite number or undefined`);
   }
   if (
@@ -187,7 +214,9 @@ function validateLandmark(
   }
 }
 
-export function assertValidPoseObservation(obs: unknown): asserts obs is PoseObservation {
+export function assertValidPoseObservation(
+  obs: unknown,
+): asserts obs is PoseObservation {
   const result = validatePoseObservation(obs);
   if (!result.valid) {
     throw new Error(`Invalid PoseObservation: ${result.errors.join('; ')}`);
@@ -208,7 +237,11 @@ export function getLandmarksByNames(
   observation: PoseObservation,
   names: readonly LandmarkName[],
   personIndex = 0,
-): Array<{ name: LandmarkName; landmark: PoseObservation['people'][number]['imageLandmarks'][number] | undefined }> {
+): Array<{
+  name: LandmarkName;
+  landmark:
+    PoseObservation['people'][number]['imageLandmarks'][number] | undefined;
+}> {
   const person = observation.people[personIndex];
   if (!person) {
     return names.map((name) => ({ name, landmark: undefined }));
@@ -226,7 +259,11 @@ export function hasCriticalLandmarks(
   const landmarks = getLandmarksByNames(observation, required, personIndex);
   return landmarks.every(({ landmark }) => {
     if (!landmark) return false;
-    if (landmark.visibility !== undefined && landmark.visibility < minVisibility) return false;
+    if (
+      landmark.visibility !== undefined &&
+      landmark.visibility < minVisibility
+    )
+      return false;
     return true;
   });
 }
@@ -256,7 +293,12 @@ export function createEmptyObservation(
 
 export function createSyntheticObservation(
   sequence: number,
-  landmarks: Partial<Record<LandmarkName, { x: number; y: number; z?: number; visibility?: number }>>,
+  landmarks: Partial<
+    Record<
+      LandmarkName,
+      { x: number; y: number; z?: number; visibility?: number }
+    >
+  >,
   overrides: Partial<PoseObservation> = {},
 ): PoseObservation {
   const hasLandmarks = Object.values(landmarks).some((v) => v !== undefined);

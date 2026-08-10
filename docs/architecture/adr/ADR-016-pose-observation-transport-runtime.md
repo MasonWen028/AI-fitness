@@ -175,7 +175,33 @@ Numeric thresholds remain governed by the approved M0 benchmark plan. The standa
 - no unbounded frame or observation queue
 - same semantic expectations for all candidates
 - no fabricated results
-- excluded candidates require explicit technical reason, not schedule preference
+- excluded candidates MUST have recorded technical evidence demonstrating non-viability, not schedule preference (per C5, M0-R0 reconciliation)
+
+## Pre-approved Benchmark Targets (R1, 2026-08-10)
+
+> **Status of ADR-016 unchanged:** this section pre-approves only the *measurement targets*. The runtime option decision (A/B/C/D) remains `PROPOSED — EXPERIMENT REQUIRED` and is accepted only in **R4** after R3 device evidence. Targets below were defined from engineering first principles **before** any R3 measurement; they are **not** tuned to existing or future device results. The Huawei/HarmonyOS 83 ms inference figure in `M0-C.md` is a *data point*, not a basis for these targets.
+
+| # | Metric | Measurement definition | Target | Failure threshold | Measurement window | Device applicability | Rationale | Source / assumption |
+|---|--------|----------------------|--------|-------------------|--------------------|---------------------|-----------|---------------------|
+| 1 | Effective observation rate | `observationsWithLandmarks` delivered to engine ÷ elapsed active time, excluding frames dropped before the provider | ≥ 28 obs/s | < 20 obs/s sustained | 60 s sustained active set | iOS + Android | Squat cadence is slow; 28–30 fps gives smooth phase/rep detection with margin | On-device fitness CV practice |
+| 2 | Inference latency p50 | median time from frame submitted to provider → landmark result produced (`lastInferenceMs`), on-device | ≤ 40 ms | p50 > 55 ms | median over ≥ 300 inferences | iOS + Android | leaves headroom under a 30 fps frame budget for transport + engine | MediaPipe Pose Landmarker typical ranges |
+| 3 | Inference latency p95 | p95 of same per-frame inference time | ≤ 60 ms | p95 > 80 ms | p95 over ≥ 300 inferences | iOS + Android | tail must stay within budget | same |
+| 4 | Observation-to-display latency p95 | p95 of (raw frame capture timestamp → overlay render of corresponding observation) | ≤ 100 ms | p95 > 150 ms | p95 over sustained run | iOS + Android | keeps overlay visually coupled to motion | UI latency guidance (<100 ms perceived coupling) |
+| 5 | JS responsiveness / JS load | count + max duration of JS-thread long tasks (>50 ms) attributable to pose/transport during active set | 0 long tasks > 50 ms from pose path; JS thread stays within frame budget | > 3 long tasks > 50 ms/s, or any single > 100 ms from pose path | 60 s sustained set | iOS + Android | UI must remain interactive; bridge/transport must not monopolize JS | RN performance guidance |
+| 6 | Overlay smoothness | overlay render fps and dropped UI-frame ratio during active set | ≥ 50 fps with < 2% dropped UI frames | < 40 fps overlay, or > 5% dropped UI frames | 60 s sustained | iOS + Android | smooth visual feedback | 60 fps UI target with margin |
+| 7 | Thermal trend | device temp delta + battery drain over sustained session; throttling/clockscale onset | no throttling within 10 min; ΔT ≤ 8 °C above ambient; sustainable | throttling observed, or ΔT > 12 °C, or forced slowdown within 10 min | 10 min sustained active session | iOS + Android | must sustain a workout-length session | device thermal envelopes; M0-ENG-007 concept |
+| 8 | Memory stability | JS heap + native memory over sustained run; monotonic-growth check | stable within ±10% over run; no unbounded growth; no OOM | monotonic growth > 20% over run, or OOM/crash | 10 min sustained | iOS + Android | long sessions must not leak | mobile memory hygiene |
+| 9 | Tracking recovery | after induced tracking loss, time to resume valid observations when person re-enters frame | ≤ 1.5 s to resume valid obs; no stuck state | > 3 s, or requires app restart | ≥ 5 loss/recovery cycles | iOS + Android | user movement is expected mid-set | UX expectation |
+| 10 | Model/profile load | cold/warm start to provider ready + first valid observation after profile load | model load ≤ 3 s; first valid ≤ 5 s (warm) | model load > 6 s, or first valid > 10 s | median over ≥ 5 starts | iOS + Android | acceptable startup | MediaPipe model load typical 1–3 s |
+| 11 | Background/foreground recovery | app backgrounded during active set then foregrounded; time to resume valid obs + state correctness | resume valid obs ≤ 2 s; correct lifecycle state; no crash | > 4 s, or stuck in error/interrupted, or requires restart | ≥ 5 bg/fg cycles | iOS + Android | interruption handling must be robust | M0-B lifecycle design |
+
+**Three layers per metric (explicit):**
+
+- **TARGET** — the value above that R3 evidence should meet for ADR-016 candidate acceptance in R4.
+- **MEASUREMENT METHOD** — the definition column; collected via the benchmark harness on representative iOS + Android devices using canonical M0-M fixtures and the active Squat profile.
+- **PASS/FAIL RULE** — a candidate option passes a metric if the measured value meets TARGET and does not breach the FAILURE threshold; breaching FAILURE → that candidate is a no-go for that metric (recorded technical evidence required to exclude it per C5).
+
+> Metrics #2/#3 apply to provider-side inference; if a chosen runtime option (B/C/D) moves inference off the JS thread, the same on-device `lastInferenceMs` instrumentation still applies.
 
 ## Consequences
 
@@ -193,8 +219,8 @@ Revisit when:
 ## Related Requirements
 
 - FR-TRANSPORT-001 through FR-TRANSPORT-006
-- FR-AIFC-001 through FR-AIFC-009
-- FR-POSE-001 through FR-POSE-009
+- FR-AIFC-001 through FR-AIFC-009 — *mandatory M0 (confirmed by M0-R0 reconciliation, 2026-08-10)*
+- FR-POSE-001 through FR-POSE-006, FR-POSE-007a, FR-POSE-008, FR-POSE-009a (M0); FR-POSE-007b, FR-POSE-009b (M1) — *split by M0-R0 reconciliation (2026-08-10)*
 - NFR-PERF-004 through NFR-PERF-008
 - M0-ENG-001 through M0-ENG-008
 - `M0-GATE-001`

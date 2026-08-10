@@ -23,19 +23,19 @@ import type { RepDetectionState } from './repDetection';
 
 /** Feedback category — determines priority ordering */
 export type FeedbackCategory =
-  | 'tracking_guidance'    // FR-FEEDBACK-007: tracking quality inadequate
-  | 'setup_guidance'       // person not in position, camera angle issues
-  | 'form_correction'      // FR-FEEDBACK-002: primary corrective cue
-  | 'positive'             // encouragement / no faults detected
-  | 'neutral';             // no active feedback (between reps, idle)
+  | 'tracking_guidance' // FR-FEEDBACK-007: tracking quality inadequate
+  | 'setup_guidance' // person not in position, camera angle issues
+  | 'form_correction' // FR-FEEDBACK-002: primary corrective cue
+  | 'positive' // encouragement / no faults detected
+  | 'neutral'; // no active feedback (between reps, idle)
 
 /** Feedback priority — higher number = higher priority (FR-FEEDBACK-006) */
 export const FEEDBACK_PRIORITY: Record<FeedbackCategory, number> = {
-  tracking_guidance: 100,   // Highest — supersedes all form cues
-  setup_guidance: 90,       // Second — need correct setup before form
-  form_correction: 50,      // Third — actual form feedback
-  positive: 10,             // Fourth — positive reinforcement
-  neutral: 0,               // Lowest — no feedback
+  tracking_guidance: 100, // Highest — supersedes all form cues
+  setup_guidance: 90, // Second — need correct setup before form
+  form_correction: 50, // Third — actual form feedback
+  positive: 10, // Fourth — positive reinforcement
+  neutral: 0, // Lowest — no feedback
 };
 
 /**
@@ -141,10 +141,14 @@ const FEEDBACK_MESSAGES = {
  * @param context  Feedback evaluation context
  * @returns        Single prioritised feedback cue
  */
-export function selectFeedback(
-  context: FeedbackContext,
-): FeedbackCue {
-  const { phase, quality, faults, repState, config = DEFAULT_FEEDBACK_CONFIG } = context;
+export function selectFeedback(context: FeedbackContext): FeedbackCue {
+  const {
+    phase,
+    quality,
+    faults,
+    repState,
+    config = DEFAULT_FEEDBACK_CONFIG,
+  } = context;
   const timestampMs = phase.enteredTimestampMs;
 
   // --- Priority 1: Tracking guidance (FR-FEEDBACK-007) ---
@@ -160,7 +164,10 @@ export function selectFeedback(
     );
   }
 
-  if (!quality.personDetected || quality.overallScore < config.minPersonDetected) {
+  if (
+    !quality.personDetected ||
+    quality.overallScore < config.minPersonDetected
+  ) {
     return makeCue(
       'tracking.no_person',
       'tracking_guidance',
@@ -225,8 +232,13 @@ export function selectFeedback(
   if (detectedFaults.length > 0) {
     // Sort by severity (CRITICAL > IMPORTANT > INFO), then by confidence (higher first)
     const sorted = [...detectedFaults].sort((a, b) => {
-      const severityOrder: Record<string, number> = { CRITICAL: 3, IMPORTANT: 2, INFO: 1 };
-      const sevDiff = (severityOrder[b.severity] ?? 0) - (severityOrder[a.severity] ?? 0);
+      const severityOrder: Record<string, number> = {
+        CRITICAL: 3,
+        IMPORTANT: 2,
+        INFO: 1,
+      };
+      const sevDiff =
+        (severityOrder[b.severity] ?? 0) - (severityOrder[a.severity] ?? 0);
       if (sevDiff !== 0) return sevDiff;
       return b.confidence - a.confidence;
     });
