@@ -16,8 +16,16 @@
  */
 
 import type { LandmarkName } from '../pose/poseContract';
-import type { NormalizedFrame, NormalizedPoint, Point3D } from './normalization';
-import { getNormalizedLandmark, computeAngle2D, computeAngle3D } from './normalization';
+import type {
+  NormalizedFrame,
+  NormalizedPoint,
+  Point3D,
+} from './normalization';
+import {
+  getNormalizedLandmark,
+  computeAngle2D,
+  computeAngle3D,
+} from './normalization';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -201,7 +209,12 @@ export function computeKneeAngle(
   if (side === 'left') {
     return computeThreePointAngle(frame, 'left_hip', 'left_knee', 'left_ankle');
   }
-  return computeThreePointAngle(frame, 'right_hip', 'right_knee', 'right_ankle');
+  return computeThreePointAngle(
+    frame,
+    'right_hip',
+    'right_knee',
+    'right_ankle',
+  );
 }
 
 /**
@@ -213,9 +226,19 @@ export function computeHipAngle(
   side: 'left' | 'right',
 ): MetricValue {
   if (side === 'left') {
-    return computeThreePointAngle(frame, 'left_shoulder', 'left_hip', 'left_knee');
+    return computeThreePointAngle(
+      frame,
+      'left_shoulder',
+      'left_hip',
+      'left_knee',
+    );
   }
-  return computeThreePointAngle(frame, 'right_shoulder', 'right_hip', 'right_knee');
+  return computeThreePointAngle(
+    frame,
+    'right_shoulder',
+    'right_hip',
+    'right_knee',
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -345,12 +368,20 @@ export function computeVelocity(
 
   // Reject non-monotonic timestamps
   if (elapsedMs <= 0) {
-    return invalidMetric(0, curr.timestampMs, Math.min(prev.minConfidence, curr.minConfidence));
+    return invalidMetric(
+      0,
+      curr.timestampMs,
+      Math.min(prev.minConfidence, curr.minConfidence),
+    );
   }
 
   // Reject implausibly large gaps
   if (elapsedMs > MAX_VELOCITY_TIMESTAMP_GAP_MS) {
-    return invalidMetric(0, curr.timestampMs, Math.min(prev.minConfidence, curr.minConfidence));
+    return invalidMetric(
+      0,
+      curr.timestampMs,
+      Math.min(prev.minConfidence, curr.minConfidence),
+    );
   }
 
   // If either metric is invalid, velocity is invalid but still computed with safe values
@@ -385,7 +416,10 @@ export function computeSquatVelocity(
     kneeAngleRight: computeVelocity(prev.kneeAngleRight, curr.kneeAngleRight),
     hipAngleLeft: computeVelocity(prev.hipAngleLeft, curr.hipAngleLeft),
     hipAngleRight: computeVelocity(prev.hipAngleRight, curr.hipAngleRight),
-    torsoInclination: computeVelocity(prev.torsoInclination, curr.torsoInclination),
+    torsoInclination: computeVelocity(
+      prev.torsoInclination,
+      curr.torsoInclination,
+    ),
     hipDepth: computeVelocity(prev.hipDepth, curr.hipDepth),
   };
 }
@@ -410,7 +444,11 @@ export function computeRangeOverWindow(values: MetricValue[]): MetricValue {
   const validValues = values.filter((v) => v.valid);
 
   if (validValues.length === 0) {
-    return invalidMetric(0, values.length > 0 ? values[values.length - 1].timestampMs : 0, 0);
+    return invalidMetric(
+      0,
+      values.length > 0 ? values[values.length - 1].timestampMs : 0,
+      0,
+    );
   }
 
   const minConf = Math.min(...validValues.map((v) => v.minConfidence));
@@ -449,7 +487,12 @@ export function computeRangeOverWindow(values: MetricValue[]): MetricValue {
  */
 export function computeSquatROM(window: SquatMetrics[]): SquatMetrics {
   if (window.length === 0) {
-    const zero: MetricValue = { value: 0, timestampMs: 0, valid: false, minConfidence: 0 };
+    const zero: MetricValue = {
+      value: 0,
+      timestampMs: 0,
+      valid: false,
+      minConfidence: 0,
+    };
     return {
       kneeAngleLeft: zero,
       kneeAngleRight: zero,
@@ -465,7 +508,9 @@ export function computeSquatROM(window: SquatMetrics[]): SquatMetrics {
     kneeAngleRight: computeRangeOverWindow(window.map((m) => m.kneeAngleRight)),
     hipAngleLeft: computeRangeOverWindow(window.map((m) => m.hipAngleLeft)),
     hipAngleRight: computeRangeOverWindow(window.map((m) => m.hipAngleRight)),
-    torsoInclination: computeRangeOverWindow(window.map((m) => m.torsoInclination)),
+    torsoInclination: computeRangeOverWindow(
+      window.map((m) => m.torsoInclination),
+    ),
     hipDepth: computeRangeOverWindow(window.map((m) => m.hipDepth)),
   };
 }

@@ -31,9 +31,7 @@ function makePhase(
   };
 }
 
-function makeQuality(
-  overrides: Partial<FrameQuality> = {},
-): FrameQuality {
+function makeQuality(overrides: Partial<FrameQuality> = {}): FrameQuality {
   return {
     hasCriticalLandmarks: true,
     minVisibility: 0.7,
@@ -130,17 +128,21 @@ describe('selectFeedback — tracking guidance (FR-FEEDBACK-007)', () => {
   });
 
   it('returns no_person when person not detected', () => {
-    const cue = selectFeedback(makeContext('READY', {
-      quality: { personDetected: false, overallScore: 0 },
-    }));
+    const cue = selectFeedback(
+      makeContext('READY', {
+        quality: { personDetected: false, overallScore: 0 },
+      }),
+    );
     expect(cue.category).toBe('tracking_guidance');
     expect(cue.key).toBe('tracking.no_person');
   });
 
   it('returns low_visibility when quality below form feedback threshold', () => {
-    const cue = selectFeedback(makeContext('DESCENDING', {
-      quality: { overallScore: 0.3 },
-    }));
+    const cue = selectFeedback(
+      makeContext('DESCENDING', {
+        quality: { overallScore: 0.3 },
+      }),
+    );
     expect(cue.category).toBe('tracking_guidance');
     expect(cue.key).toBe('tracking.low_visibility');
   });
@@ -149,10 +151,12 @@ describe('selectFeedback — tracking guidance (FR-FEEDBACK-007)', () => {
     // Even with a detected fault, low quality → tracking guidance
     // overallScore must be above minPersonDetected (0.3) but below minQualityForFormFeedback (0.4)
     const fault = makeFault('INSUFFICIENT_DEPTH', 'DETECTED');
-    const cue = selectFeedback(makeContext('BOTTOM', {
-      quality: { overallScore: 0.35 },
-      faults: [fault],
-    }));
+    const cue = selectFeedback(
+      makeContext('BOTTOM', {
+        quality: { overallScore: 0.35 },
+        faults: [fault],
+      }),
+    );
     expect(cue.category).toBe('tracking_guidance');
     expect(cue.key).toBe('tracking.low_visibility');
   });
@@ -163,10 +167,12 @@ describe('selectFeedback — tracking guidance (FR-FEEDBACK-007)', () => {
       minQualityForFormFeedback: 0.6,
     };
     // Quality = 0.5, threshold = 0.6 → tracking guidance
-    const cue = selectFeedback(makeContext('DESCENDING', {
-      quality: { overallScore: 0.5 },
-      config,
-    }));
+    const cue = selectFeedback(
+      makeContext('DESCENDING', {
+        quality: { overallScore: 0.5 },
+        config,
+      }),
+    );
     expect(cue.category).toBe('tracking_guidance');
   });
 });
@@ -189,24 +195,28 @@ describe('selectFeedback — setup guidance', () => {
   });
 
   it('returns positive good_rep when READY after a completed rep', () => {
-    const cue = selectFeedback(makeContext('READY', {
-      repState: {
-        completedReps: [makeRepResult('completed')],
-        currentAttempt: null,
-      },
-    }));
+    const cue = selectFeedback(
+      makeContext('READY', {
+        repState: {
+          completedReps: [makeRepResult('completed')],
+          currentAttempt: null,
+        },
+      }),
+    );
     expect(cue.category).toBe('positive');
     expect(cue.key).toBe('positive.good_rep');
   });
 
   it('returns not_ready when READY after an incomplete rep', () => {
-    const cue = selectFeedback(makeContext('READY', {
-      repState: {
-        completedReps: [],
-        incompleteReps: [makeRepResult('incomplete')],
-        currentAttempt: null,
-      },
-    }));
+    const cue = selectFeedback(
+      makeContext('READY', {
+        repState: {
+          completedReps: [],
+          incompleteReps: [makeRepResult('incomplete')],
+          currentAttempt: null,
+        },
+      }),
+    );
     expect(cue.category).toBe('setup_guidance');
     expect(cue.key).toBe('setup.not_ready');
   });
@@ -219,13 +229,21 @@ describe('selectFeedback — setup guidance', () => {
 describe('selectFeedback — form correction (FR-FEEDBACK-002)', () => {
   it('returns form correction when a fault is detected during active phase', () => {
     const fault = makeFault('INSUFFICIENT_DEPTH', 'DETECTED');
-    const cue = selectFeedback(makeContext('BOTTOM', {
-      faults: [fault],
-      repState: { currentAttempt: {
-        startTimestampMs: 500, visitedBottom: true,
-        minConfidence: 0.8, confidenceSum: 0.8, confidenceCount: 1, kneeAngleValues: [],
-      } },
-    }));
+    const cue = selectFeedback(
+      makeContext('BOTTOM', {
+        faults: [fault],
+        repState: {
+          currentAttempt: {
+            startTimestampMs: 500,
+            visitedBottom: true,
+            minConfidence: 0.8,
+            confidenceSum: 0.8,
+            confidenceCount: 1,
+            kneeAngleValues: [],
+          },
+        },
+      }),
+    );
     expect(cue.category).toBe('form_correction');
     expect(cue.key).toBe('form.insufficient_depth');
     expect(cue.sourceFaultCode).toBe('INSUFFICIENT_DEPTH');
@@ -233,57 +251,95 @@ describe('selectFeedback — form correction (FR-FEEDBACK-002)', () => {
 
   it('returns form correction for EXCESSIVE_FORWARD_LEAN', () => {
     const fault = makeFault('EXCESSIVE_FORWARD_LEAN', 'DETECTED');
-    const cue = selectFeedback(makeContext('DESCENDING', {
-      faults: [fault],
-      repState: { currentAttempt: {
-        startTimestampMs: 500, visitedBottom: false,
-        minConfidence: 0.8, confidenceSum: 0.8, confidenceCount: 1, kneeAngleValues: [],
-      } },
-    }));
+    const cue = selectFeedback(
+      makeContext('DESCENDING', {
+        faults: [fault],
+        repState: {
+          currentAttempt: {
+            startTimestampMs: 500,
+            visitedBottom: false,
+            minConfidence: 0.8,
+            confidenceSum: 0.8,
+            confidenceCount: 1,
+            kneeAngleValues: [],
+          },
+        },
+      }),
+    );
     expect(cue.category).toBe('form_correction');
     expect(cue.key).toBe('form.excessive_forward_lean');
     expect(cue.sourceFaultCode).toBe('EXCESSIVE_FORWARD_LEAN');
   });
 
   it('selects highest severity fault when multiple detected', () => {
-    const fault1 = makeFault('INSUFFICIENT_DEPTH', 'DETECTED', { severity: 'IMPORTANT' });
-    const fault2 = makeFault('EXCESSIVE_FORWARD_LEAN', 'DETECTED', { severity: 'CRITICAL' });
-    const cue = selectFeedback(makeContext('BOTTOM', {
-      faults: [fault1, fault2],
-      repState: { currentAttempt: {
-        startTimestampMs: 500, visitedBottom: true,
-        minConfidence: 0.8, confidenceSum: 0.8, confidenceCount: 1, kneeAngleValues: [],
-      } },
-    }));
+    const fault1 = makeFault('INSUFFICIENT_DEPTH', 'DETECTED', {
+      severity: 'IMPORTANT',
+    });
+    const fault2 = makeFault('EXCESSIVE_FORWARD_LEAN', 'DETECTED', {
+      severity: 'CRITICAL',
+    });
+    const cue = selectFeedback(
+      makeContext('BOTTOM', {
+        faults: [fault1, fault2],
+        repState: {
+          currentAttempt: {
+            startTimestampMs: 500,
+            visitedBottom: true,
+            minConfidence: 0.8,
+            confidenceSum: 0.8,
+            confidenceCount: 1,
+            kneeAngleValues: [],
+          },
+        },
+      }),
+    );
     expect(cue.sourceFaultCode).toBe('EXCESSIVE_FORWARD_LEAN');
   });
 
   it('selects higher confidence when severity is equal', () => {
     const fault1 = makeFault('INSUFFICIENT_DEPTH', 'DETECTED', {
-      severity: 'IMPORTANT', confidence: 0.6,
+      severity: 'IMPORTANT',
+      confidence: 0.6,
     });
     const fault2 = makeFault('EXCESSIVE_FORWARD_LEAN', 'DETECTED', {
-      severity: 'IMPORTANT', confidence: 0.9,
+      severity: 'IMPORTANT',
+      confidence: 0.9,
     });
-    const cue = selectFeedback(makeContext('BOTTOM', {
-      faults: [fault1, fault2],
-      repState: { currentAttempt: {
-        startTimestampMs: 500, visitedBottom: true,
-        minConfidence: 0.8, confidenceSum: 0.8, confidenceCount: 1, kneeAngleValues: [],
-      } },
-    }));
+    const cue = selectFeedback(
+      makeContext('BOTTOM', {
+        faults: [fault1, fault2],
+        repState: {
+          currentAttempt: {
+            startTimestampMs: 500,
+            visitedBottom: true,
+            minConfidence: 0.8,
+            confidenceSum: 0.8,
+            confidenceCount: 1,
+            kneeAngleValues: [],
+          },
+        },
+      }),
+    );
     expect(cue.sourceFaultCode).toBe('EXCESSIVE_FORWARD_LEAN');
   });
 
   it('ignores NOT_OBSERVABLE faults for form correction', () => {
     const fault = makeFault('INSUFFICIENT_DEPTH', 'NOT_OBSERVABLE');
-    const cue = selectFeedback(makeContext('BOTTOM', {
-      faults: [fault],
-      repState: { currentAttempt: {
-        startTimestampMs: 500, visitedBottom: true,
-        minConfidence: 0.8, confidenceSum: 0.8, confidenceCount: 1, kneeAngleValues: [],
-      } },
-    }));
+    const cue = selectFeedback(
+      makeContext('BOTTOM', {
+        faults: [fault],
+        repState: {
+          currentAttempt: {
+            startTimestampMs: 500,
+            visitedBottom: true,
+            minConfidence: 0.8,
+            confidenceSum: 0.8,
+            confidenceCount: 1,
+            kneeAngleValues: [],
+          },
+        },
+      }),
+    );
     // No detected faults → positive feedback
     expect(cue.category).toBe('positive');
   });
@@ -293,13 +349,21 @@ describe('selectFeedback — form correction (FR-FEEDBACK-002)', () => {
       makeFault('INSUFFICIENT_DEPTH', 'DETECTED'),
       makeFault('EXCESSIVE_FORWARD_LEAN', 'DETECTED'),
     ];
-    const cue = selectFeedback(makeContext('BOTTOM', {
-      faults,
-      repState: { currentAttempt: {
-        startTimestampMs: 500, visitedBottom: true,
-        minConfidence: 0.8, confidenceSum: 0.8, confidenceCount: 1, kneeAngleValues: [],
-      } },
-    }));
+    const cue = selectFeedback(
+      makeContext('BOTTOM', {
+        faults,
+        repState: {
+          currentAttempt: {
+            startTimestampMs: 500,
+            visitedBottom: true,
+            minConfidence: 0.8,
+            confidenceSum: 0.8,
+            confidenceCount: 1,
+            kneeAngleValues: [],
+          },
+        },
+      }),
+    );
     // Should have exactly one sourceFaultCode
     expect(cue.sourceFaultCode).toBeDefined();
     expect(cue.category).toBe('form_correction');
@@ -312,23 +376,33 @@ describe('selectFeedback — form correction (FR-FEEDBACK-002)', () => {
 
 describe('selectFeedback — positive feedback', () => {
   it('returns good_form during active movement with no faults', () => {
-    const cue = selectFeedback(makeContext('DESCENDING', {
-      repState: { currentAttempt: {
-        startTimestampMs: 500, visitedBottom: false,
-        minConfidence: 0.8, confidenceSum: 0.8, confidenceCount: 1, kneeAngleValues: [],
-      } },
-    }));
+    const cue = selectFeedback(
+      makeContext('DESCENDING', {
+        repState: {
+          currentAttempt: {
+            startTimestampMs: 500,
+            visitedBottom: false,
+            minConfidence: 0.8,
+            confidenceSum: 0.8,
+            confidenceCount: 1,
+            kneeAngleValues: [],
+          },
+        },
+      }),
+    );
     expect(cue.category).toBe('positive');
     expect(cue.key).toBe('positive.good_form');
   });
 
   it('returns good_rep when returning to READY after completed rep', () => {
-    const cue = selectFeedback(makeContext('READY', {
-      repState: {
-        completedReps: [makeRepResult('completed')],
-        currentAttempt: null,
-      },
-    }));
+    const cue = selectFeedback(
+      makeContext('READY', {
+        repState: {
+          completedReps: [makeRepResult('completed')],
+          currentAttempt: null,
+        },
+      }),
+    );
     expect(cue.category).toBe('positive');
     expect(cue.key).toBe('positive.good_rep');
   });
@@ -341,15 +415,25 @@ describe('selectFeedback — positive feedback', () => {
 describe('selectFeedback — neutral', () => {
   it('returns neutral for READY with current attempt (edge case)', () => {
     // This is an unusual state but should not crash
-    const cue = selectFeedback(makeContext('READY', {
-      repState: { currentAttempt: {
-        startTimestampMs: 500, visitedBottom: false,
-        minConfidence: 0.8, confidenceSum: 0.8, confidenceCount: 1, kneeAngleValues: [],
-      } },
-    }));
+    const cue = selectFeedback(
+      makeContext('READY', {
+        repState: {
+          currentAttempt: {
+            startTimestampMs: 500,
+            visitedBottom: false,
+            minConfidence: 0.8,
+            confidenceSum: 0.8,
+            confidenceCount: 1,
+            kneeAngleValues: [],
+          },
+        },
+      }),
+    );
     // READY with current attempt — positive good_rep doesn't apply (no completed reps)
     // Falls through to neutral
-    expect(cue.category === 'positive' || cue.category === 'neutral').toBe(true);
+    expect(cue.category === 'positive' || cue.category === 'neutral').toBe(
+      true,
+    );
   });
 });
 
@@ -453,13 +537,21 @@ describe('shouldSupersede (FR-FEEDBACK-006)', () => {
 
 describe('feedback cue structure', () => {
   it('every cue has required fields', () => {
-    const cue = selectFeedback(makeContext('BOTTOM', {
-      faults: [makeFault('INSUFFICIENT_DEPTH', 'DETECTED')],
-      repState: { currentAttempt: {
-        startTimestampMs: 500, visitedBottom: true,
-        minConfidence: 0.8, confidenceSum: 0.8, confidenceCount: 1, kneeAngleValues: [],
-      } },
-    }));
+    const cue = selectFeedback(
+      makeContext('BOTTOM', {
+        faults: [makeFault('INSUFFICIENT_DEPTH', 'DETECTED')],
+        repState: {
+          currentAttempt: {
+            startTimestampMs: 500,
+            visitedBottom: true,
+            minConfidence: 0.8,
+            confidenceSum: 0.8,
+            confidenceCount: 1,
+            kneeAngleValues: [],
+          },
+        },
+      }),
+    );
     expect(cue.key).toBeTruthy();
     expect(cue.category).toBeTruthy();
     expect(cue.priority).toBeGreaterThan(0);
@@ -470,9 +562,17 @@ describe('feedback cue structure', () => {
   });
 
   it('priority values are correctly ordered', () => {
-    expect(FEEDBACK_PRIORITY.tracking_guidance).toBeGreaterThan(FEEDBACK_PRIORITY.setup_guidance);
-    expect(FEEDBACK_PRIORITY.setup_guidance).toBeGreaterThan(FEEDBACK_PRIORITY.form_correction);
-    expect(FEEDBACK_PRIORITY.form_correction).toBeGreaterThan(FEEDBACK_PRIORITY.positive);
-    expect(FEEDBACK_PRIORITY.positive).toBeGreaterThan(FEEDBACK_PRIORITY.neutral);
+    expect(FEEDBACK_PRIORITY.tracking_guidance).toBeGreaterThan(
+      FEEDBACK_PRIORITY.setup_guidance,
+    );
+    expect(FEEDBACK_PRIORITY.setup_guidance).toBeGreaterThan(
+      FEEDBACK_PRIORITY.form_correction,
+    );
+    expect(FEEDBACK_PRIORITY.form_correction).toBeGreaterThan(
+      FEEDBACK_PRIORITY.positive,
+    );
+    expect(FEEDBACK_PRIORITY.positive).toBeGreaterThan(
+      FEEDBACK_PRIORITY.neutral,
+    );
   });
 });

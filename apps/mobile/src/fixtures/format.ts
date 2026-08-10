@@ -12,8 +12,12 @@ function cloneObservation(observation: PoseObservation): PoseObservation {
     imageSize: { ...observation.imageSize },
     people: observation.people.map((person) => ({
       ...person,
-      imageLandmarks: person.imageLandmarks.map((landmark) => ({ ...landmark })),
-      worldLandmarks: person.worldLandmarks?.map((landmark) => ({ ...landmark })),
+      imageLandmarks: person.imageLandmarks.map((landmark) => ({
+        ...landmark,
+      })),
+      worldLandmarks: person.worldLandmarks?.map((landmark) => ({
+        ...landmark,
+      })),
     })),
     provider: { ...observation.provider },
   };
@@ -69,11 +73,20 @@ export function validateFixture(fixture: unknown): FixtureValidationResult {
   if (!candidate.metadata) {
     errors.push('metadata must be present');
   } else {
-    if (typeof candidate.metadata.recordedAt !== 'string' || candidate.metadata.recordedAt.length === 0) {
+    if (
+      typeof candidate.metadata.recordedAt !== 'string' ||
+      candidate.metadata.recordedAt.length === 0
+    ) {
       errors.push('metadata.recordedAt must be a non-empty string');
     }
-    if (!['synthetic', 'device-capture', 'replay-export'].includes(candidate.metadata.source)) {
-      errors.push('metadata.source must be synthetic, device-capture, or replay-export');
+    if (
+      !['synthetic', 'device-capture', 'replay-export'].includes(
+        candidate.metadata.source,
+      )
+    ) {
+      errors.push(
+        'metadata.source must be synthetic, device-capture, or replay-export',
+      );
     }
     if (
       typeof candidate.metadata.frameIntervalMs !== 'number' ||
@@ -98,7 +111,8 @@ export function validateFixture(fixture: unknown): FixtureValidationResult {
       try {
         assertValidPoseObservation(observation);
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'unknown observation error';
+        const message =
+          error instanceof Error ? error.message : 'unknown observation error';
         errors.push(`observations[${index}] invalid: ${message}`);
       }
     });
@@ -107,10 +121,14 @@ export function validateFixture(fixture: unknown): FixtureValidationResult {
       const previous = candidate.observations[index - 1];
       const current = candidate.observations[index];
       if (current.timestampMs < previous.timestampMs) {
-        errors.push(`observations timestamps must be non-decreasing at index ${index}`);
+        errors.push(
+          `observations timestamps must be non-decreasing at index ${index}`,
+        );
       }
       if (current.sequence < previous.sequence) {
-        errors.push(`observations sequences must be non-decreasing at index ${index}`);
+        errors.push(
+          `observations sequences must be non-decreasing at index ${index}`,
+        );
       }
     }
   }

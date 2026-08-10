@@ -19,7 +19,9 @@ export type ReplaySimulator = {
   reset(): void;
 };
 
-export function createReplaySimulator(fixture: PoseObservationFixture): ReplaySimulator {
+export function createReplaySimulator(
+  fixture: PoseObservationFixture,
+): ReplaySimulator {
   let cursor = 0;
   let emittedCount = 0;
   let mode: ReplayMode = fixture.observations.length > 0 ? 'idle' : 'completed';

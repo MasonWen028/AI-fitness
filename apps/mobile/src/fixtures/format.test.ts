@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { createSyntheticObservation } from '../pose/poseValidation';
-import { createFixture, deserializeFixture, serializeFixture, validateFixture } from './format';
+import {
+  createFixture,
+  deserializeFixture,
+  serializeFixture,
+  validateFixture,
+} from './format';
 import { FIXTURE_FORMAT_VERSION } from './types';
 
 function createValidFixture() {
@@ -76,12 +81,15 @@ describe('fixture format', () => {
         'metadata.frameIntervalMs must be a positive number',
       ]),
     );
-    expect(result.errors.some((error) => error.includes('observations[0] invalid'))).toBe(true);
+    expect(
+      result.errors.some((error) => error.includes('observations[0] invalid')),
+    ).toBe(true);
   });
 
   it('rejects non-monotonic timestamps and sequences', () => {
     const fixture = createValidFixture();
-    fixture.observations[1].timestampMs = fixture.observations[0].timestampMs - 1;
+    fixture.observations[1].timestampMs =
+      fixture.observations[0].timestampMs - 1;
     fixture.observations[1].sequence = fixture.observations[0].sequence - 1;
 
     const result = validateFixture(fixture);

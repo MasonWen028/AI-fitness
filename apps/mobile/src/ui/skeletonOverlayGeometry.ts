@@ -1,4 +1,8 @@
-import type { Landmark, LandmarkName, PoseObservation } from '../pose/poseContract';
+import type {
+  Landmark,
+  LandmarkName,
+  PoseObservation,
+} from '../pose/poseContract';
 import { getLandmarkByName } from '../pose/poseValidation';
 
 export type OverlayPoint = {
@@ -13,7 +17,9 @@ export type SkeletonSegment = {
   end: OverlayPoint;
 };
 
-export const SQUAT_SKELETON_CONNECTIONS: ReadonlyArray<readonly [LandmarkName, LandmarkName]> = [
+export const SQUAT_SKELETON_CONNECTIONS: ReadonlyArray<
+  readonly [LandmarkName, LandmarkName]
+> = [
   ['left_shoulder', 'right_shoulder'],
   ['left_shoulder', 'left_hip'],
   ['right_shoulder', 'right_hip'],
@@ -49,7 +55,12 @@ export function buildSkeletonSegments(
   height: number,
   personIndex = 0,
 ): SkeletonSegment[] {
-  if (!observation || !observation.landmarksAvailable || width <= 0 || height <= 0) {
+  if (
+    !observation ||
+    !observation.landmarksAvailable ||
+    width <= 0 ||
+    height <= 0
+  ) {
     return [];
   }
 
@@ -78,7 +89,12 @@ export function buildSkeletonJoints(
   height: number,
   personIndex = 0,
 ): Array<{ name: LandmarkName; point: OverlayPoint }> {
-  if (!observation || !observation.landmarksAvailable || width <= 0 || height <= 0) {
+  if (
+    !observation ||
+    !observation.landmarksAvailable ||
+    width <= 0 ||
+    height <= 0
+  ) {
     return [];
   }
 

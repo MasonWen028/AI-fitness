@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { createEmptyObservation, createSyntheticObservation } from '../pose/poseValidation';
+import {
+  createEmptyObservation,
+  createSyntheticObservation,
+} from '../pose/poseValidation';
 import {
   buildSkeletonSegments,
   clampNormalizedCoordinate,
@@ -46,8 +49,12 @@ describe('SkeletonOverlay helpers', () => {
       start: { x: 60, y: 120 },
       end: { x: 240, y: 120 },
     });
-    expect(segments.every((segment) => segment.start.x >= 0 && segment.end.x <= 300)).toBe(true);
-    expect(segments.every((segment) => segment.start.y >= 0 && segment.end.y <= 600)).toBe(true);
+    expect(
+      segments.every((segment) => segment.start.x >= 0 && segment.end.x <= 300),
+    ).toBe(true);
+    expect(
+      segments.every((segment) => segment.start.y >= 0 && segment.end.y <= 600),
+    ).toBe(true);
   });
 
   it('skips connections when either endpoint is missing', () => {
@@ -70,8 +77,18 @@ describe('SkeletonOverlay helpers', () => {
 
     const segments = buildSkeletonSegments(observation, 300, 600);
 
-    expect(segments.some((segment) => segment.from === 'right_shoulder' && segment.to === 'right_hip')).toBe(false);
-    expect(segments.some((segment) => segment.from === 'right_hip' && segment.to === 'right_knee')).toBe(false);
+    expect(
+      segments.some(
+        (segment) =>
+          segment.from === 'right_shoulder' && segment.to === 'right_hip',
+      ),
+    ).toBe(false);
+    expect(
+      segments.some(
+        (segment) =>
+          segment.from === 'right_hip' && segment.to === 'right_knee',
+      ),
+    ).toBe(false);
     expect(segments).toHaveLength(3);
   });
 
