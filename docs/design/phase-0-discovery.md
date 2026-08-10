@@ -2,7 +2,8 @@
 
 **Status:** Approved with typography and accessibility refinements on 2026-08-08
 **Design branch:** `codex/design-foundation`
-**Baseline:** `m0-a-complete` (`8051c15`)
+**Original discovery baseline:** `m0-a-complete` (`8051c15`)
+**Current stable baseline:** `origin/main` (`0a425b2`), including merged M0-B and the design checkpoint
 **Figma:** [AI Fitness — Product Design System](https://www.figma.com/design/YjKfAowet2M4zdzQds8jEH)
 
 ## Source-of-truth order
@@ -50,29 +51,40 @@ H5 uses the web contract and mobile content priority, but does not imply native 
 
 Admin is a dense desktop productivity surface for catalogue/content, licence/media status, profile/rule review, feature flags, support, and audit. Full Admin is outside M0/M1.
 
-## M0-B boundary
+## Stable implementation boundary
 
-### M0-B relevant — design specification only
+### M0-B IMPLEMENTED BEHAVIOUR
 
-- Contextual camera-purpose explanation.
-- Camera permission loading, request, denial, and restricted states.
-- Explicit setup gate before preview activation.
-- Preview inactive and preview active states.
-- Background/interruption recovery.
-- Manual fallback that preserves the set.
-- Large, accessible primary action and readable status.
+- A technical React Native shell owns permission snapshots and an explicit camera-start gate.
+- Passive permission grant does not mount the preview; an explicit start action is required.
+- The reducer covers loading, ready-to-setup, requesting, denied, active, interrupted, and manual-fallback lifecycles.
+- Backgrounding, mount error, and permission revocation while active unmount the preview and preserve a recoverable state where possible.
+- Manual fallback exists and does not require camera access.
+- Reducer tests establish state-machine invariants; the milestone evidence does not establish physical-device behavior for OS prompts, blocked permission, live preview, interruption, mount failure, or iOS execution.
+- Hard-coded styling, native default buttons, technical milestone copy, and the generic OS permission string are prototype details rather than design precedent.
 
-These designs must not change `apps/mobile/App.tsx`, `apps/mobile/app.json`, `apps/mobile/package.json`, `apps/mobile/src/camera/**`, `docs/evidence/M0-B.md`, or `pnpm-lock.yaml` during parallel M0-B work.
+### DESIGN RECOMMENDATION FOR FUTURE IMPLEMENTATION
 
-### Future implementation — outside M0-B
+**FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE.** Preserve the implemented lifecycle invariants while adding:
+
+- Contextual camera-purpose explanation before the system prompt.
+- Permission loading, request, requesting, denial, restricted, revoked, and unavailable presentations with truthful platform recovery.
+- Intentional primary/secondary action hierarchy rather than copying the technical shell's default fallback action.
+- Large accessible targets, product-language status copy, and accessible announcements.
+- Manual fallback that preserves the user's in-progress set.
+
+The design workstream must not modify M0-B production files while documenting this reconciliation.
+
+### Future implementation outside the current stable baseline
 
 - Product navigation, authentication, Today, Explore, workout builder, history, progress, and profile.
 - Positioning, calibration, countdown, skeleton overlay, rep counting, form cues, and set scoring beyond the camera-pipeline boundary.
 - Web, H5, Admin, backend, sync, analytics, and AI Coach implementation.
+- Any M0-C-dependent exploration. Label it **FUTURE IMPLEMENTATION — OUTSIDE CURRENT STABLE BASELINE** and do not use the active M0-C branch as evidence.
 
 ### Production UI implementation gate
 
-Production UI work starts only after M0-B is closed, this branch is rebased onto the latest stable branch, conflicts are reviewed, and the relevant future milestone is active.
+M0-B is closed and this design branch is synchronized to fetched stable `origin/main`. Production UI work remains blocked until the design foundation passes accessibility, cross-platform consistency, and adversarial UX review; the relevant implementation milestone is explicitly authorized; and the design branch is synchronized again immediately before implementation.
 
 ## Approved visual direction
 
@@ -95,7 +107,7 @@ Production UI work starts only after M0-B is closed, this branch is rebased onto
 - `Dimension` — spacing, radius, border width, target size, icon size, gutters, and content widths.
 - `Motion` — duration and documented easing references; reduced-motion behavior remains explicit in component notes.
 
-The split color collections are a **Figma Starter-plan tooling limitation**, not the production architecture. The intended implementation remains `semantic color tokens → theme-specific values → platform implementation`. Web, H5, React Native, and Admin must use a proper theme/token abstraction after M0-B closes and must not reproduce the two-collection workaround literally.
+The split color collections are a **Figma Starter-plan tooling limitation**, not the production architecture. The intended implementation remains `semantic color tokens → theme-specific values → platform implementation`. Web, H5, React Native, and Admin must use a proper theme/token abstraction when implementation is authorized and must not reproduce the two-collection workaround literally.
 
 ### Typography styles
 
@@ -146,9 +158,9 @@ The split color collections are a **Figma Starter-plan tooling limitation**, not
 
 ### Mobile shared/iOS/Android
 
-- Camera permission/setup state matrix — M0-B relevant, design-only.
-- Camera preview active — M0-B relevant, design-only.
-- Camera interrupted/manual fallback — M0-B relevant, design-only.
+- Camera permission/setup state matrix — future product representation informed by merged M0-B lifecycle evidence.
+- Camera preview active — future product representation informed by merged M0-B lifecycle evidence.
+- Camera interrupted/manual fallback — future product representation informed by merged M0-B lifecycle evidence.
 - Today.
 - Exercise guidance.
 - Active Form Check with one cue and large metrics — future beyond M0-B.
@@ -198,7 +210,7 @@ These are design transformation bands, not the unresolved supported-device/brows
 ### Codebase-only
 
 - Dark technical shell with hard-coded colors and type.
-- M0-B camera state machine and prototype screen owned by the parallel branch.
+- Merged M0-B camera state machine and technical prototype screen on stable `main`.
 - No semantic token source, reusable UI component library, production navigation, or responsive product UI.
 
 ### Figma-only/reusable libraries
@@ -211,11 +223,12 @@ These are design transformation bands, not the unresolved supported-device/brows
 
 - Build local AI Fitness foundations and semantic components.
 - Reuse/import platform kits only for native chrome and specification reference; do not adopt their visual identity as the product brand.
-- Do not map Figma components to production code yet because no stable UI component source exists and M0-B is still active.
+- Do not map Figma components to production code yet because no stable product UI component source exists and the design foundation has not passed its review gate.
+- Keep the independent M0-C workstream isolated; do not checkout, modify, cherry-pick, or depend on it.
 
 ## Approval record
 
 - “Measured Momentum” is the approved working visual direction.
 - The Phase 1–4 Figma scope is approved, with coherence and state coverage prioritized over screen count.
 - `docs/design/` is the approved persistent artifact location.
-- Production UI implementation remains blocked until M0-B is closed and this design branch is rebased onto the latest stable branch.
+- M0-B closure and stable-main synchronization were confirmed on 2026-08-08; production UI implementation remains blocked by the design foundation review gate and explicit milestone authorization.
