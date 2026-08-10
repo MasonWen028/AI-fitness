@@ -1,6 +1,13 @@
-import type { Landmark, LandmarkName, PoseObservation } from '../pose/poseContract';
+import type {
+  Landmark,
+  LandmarkName,
+  PoseObservation,
+} from '../pose/poseContract';
 import { LANDMARK_NAMES, SQUAT_CRITICAL_LANDMARKS } from '../pose/poseContract';
-import { getLandmarksByNames, hasCriticalLandmarks } from '../pose/poseValidation';
+import {
+  getLandmarksByNames,
+  hasCriticalLandmarks,
+} from '../pose/poseValidation';
 
 export type Point3D = {
   x: number;
@@ -49,7 +56,6 @@ export function normalizeObservation(
     person.imageLandmarks,
     observation.rotationDegrees,
     observation.mirrored,
-    observation.imageSize,
   );
 
   const landmarkMap = new Map<LandmarkName, NormalizedPoint>();
@@ -89,13 +95,10 @@ function canonicalizeCoordinates(
   landmarks: Landmark[],
   rotation: 0 | 90 | 180 | 270,
   mirrored: boolean,
-  imageSize: { width: number; height: number },
 ): NormalizedPoint[] {
-  const aspectRatio = imageSize.width / imageSize.height;
-
   return landmarks.map((lm) => {
-    let x = lm.x;
-    let y = lm.y;
+    let x = clamp(lm.x, 0, 1);
+    let y = clamp(lm.y, 0, 1);
 
     if (mirrored) {
       x = 1 - x;
@@ -122,23 +125,22 @@ function canonicalizeCoordinates(
         break;
     }
 
-    nx = clamp(nx, 0, 1);
-    ny = clamp(ny, 0, 1);
-
     return {
       name: lm.name,
-      x: nx,
-      y: ny,
-      z: lm.z ?? 0,
-      visibility: lm.visibility ?? DEFAULT_VISIBILITY,
-      presence: lm.presence ?? DEFAULT_PRESENCE,
+      x: clamp(nx, 0, 1),
+      y: clamp(ny, 0, 1),
+      z: Number.isFinite(lm.z) ? (lm.z ?? 0) : 0,
+      visibility: clamp(lm.visibility ?? DEFAULT_VISIBILITY, 0, 1),
+      presence: clamp(lm.presence ?? DEFAULT_PRESENCE, 0, 1),
     };
   });
 }
 
-function computeHipMidpoint(
-  landmarks: Map<LandmarkName, NormalizedPoint>,
-): { x: number; y: number; z: number } {
+function computeHipMidpoint(landmarks: Map<LandmarkName, NormalizedPoint>): {
+  x: number;
+  y: number;
+  z: number;
+} {
   const leftHip = landmarks.get('left_hip');
   const rightHip = landmarks.get('right_hip');
 
@@ -157,7 +159,10 @@ function computeHipMidpoint(
     return { x: rightHip.x, y: rightHip.y, z: rightHip.z };
   }
 
-  let sumX = 0, sumY = 0, sumZ = 0, count = 0;
+  let sumX = 0,
+    sumY = 0,
+    sumZ = 0,
+    count = 0;
   for (const lm of landmarks.values()) {
     if (lm.visibility > 0) {
       sumX += lm.x;
@@ -170,7 +175,9 @@ function computeHipMidpoint(
   return { x: sumX / count, y: sumY / count, z: sumZ / count };
 }
 
-function computeScaleFactor(landmarks: Map<LandmarkName, NormalizedPoint>): number {
+function computeScaleFactor(
+  landmarks: Map<LandmarkName, NormalizedPoint>,
+): number {
   const leftHip = landmarks.get('left_hip');
   const rightHip = landmarks.get('right_hip');
 
@@ -217,7 +224,11 @@ export function assessQuality(
   minVisibility = DEFAULT_VISIBILITY,
 ): FrameQuality {
   const person = observation.people[personIndex];
-  if (!person || !observation.landmarksAvailable || person.imageLandmarks.length === 0) {
+  if (
+    !person ||
+    !observation.landmarksAvailable ||
+    person.imageLandmarks.length === 0
+  ) {
     return {
       hasCriticalLandmarks: false,
       minVisibility: 0,
@@ -229,32 +240,48 @@ export function assessQuality(
     };
   }
 
-  const criticalResults = getLandmarksByNames(observation, SQUAT_CRITICAL_LANDMARKS, personIndex);
+  const criticalResults = getLandmarksByNames(
+    observation,
+    SQUAT_CRITICAL_LANDMARKS,
+    personIndex,
+  );
   const missingLandmarks: LandmarkName[] = [];
   const lowVisibilityLandmarks: LandmarkName[] = [];
 
   for (const { name, landmark } of criticalResults) {
     if (!landmark) {
       missingLandmarks.push(name);
-    } else if (landmark.visibility !== undefined && landmark.visibility < minVisibility) {
+    } else if (
+      landmark.visibility !== undefined &&
+      landmark.visibility < minVisibility
+    ) {
       lowVisibilityLandmarks.push(name);
     }
   }
 
   const allVisibilities = person.imageLandmarks
-    .map((lm) => lm.visibility ?? DEFAULT_VISIBILITY)
+    .map((lm) => clamp(lm.visibility ?? DEFAULT_VISIBILITY, 0, 1))
     .filter((v) => v > 0);
 
   const minVis = allVisibilities.length > 0 ? Math.min(...allVisibilities) : 0;
-  const avgVis = allVisibilities.length > 0
-    ? allVisibilities.reduce((a, b) => a + b, 0) / allVisibilities.length
-    : 0;
+  const avgVis =
+    allVisibilities.length > 0
+      ? allVisibilities.reduce((a, b) => a + b, 0) / allVisibilities.length
+      : 0;
 
-  const hasCritical = hasCriticalLandmarks(observation, SQUAT_CRITICAL_LANDMARKS, personIndex, minVisibility);
+  const hasCritical = hasCriticalLandmarks(
+    observation,
+    SQUAT_CRITICAL_LANDMARKS,
+    personIndex,
+    minVisibility,
+  );
   const personDetected = person.posePresence > 0.3;
 
-  const criticalScore = (SQUAT_CRITICAL_LANDMARKS.length - missingLandmarks.length - lowVisibilityLandmarks.length)
-    / SQUAT_CRITICAL_LANDMARKS.length;
+  const criticalScore =
+    (SQUAT_CRITICAL_LANDMARKS.length -
+      missingLandmarks.length -
+      lowVisibilityLandmarks.length) /
+    SQUAT_CRITICAL_LANDMARKS.length;
   const overallScore = personDetected ? criticalScore * avgVis : 0;
 
   return {
@@ -325,7 +352,13 @@ export function computeAngle3D(
 }
 
 function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
 }
 
 export const SQUAT_LANDMARKS = SQUAT_CRITICAL_LANDMARKS;

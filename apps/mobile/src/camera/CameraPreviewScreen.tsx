@@ -16,11 +16,29 @@ import { PoseCameraView } from '../../modules/pose-camera';
 import type { PoseProviderStatus } from '../pose/poseProviderStatus';
 import { getUnavailablePoseProviderStatus } from '../pose/poseProviderStatus';
 import type { PoseObservation } from '../pose/poseContract';
+import { adaptNativePoseObservation } from '../pose/poseEventAdapters';
+import { validatePoseObservation } from '../pose/poseValidation';
+import {
+  DEFAULT_POSE_MODEL_ASSET_PATH,
+  DEFAULT_POSE_MODEL_VERSION,
+} from '../pose/poseModelManifest';
 import SkeletonOverlay from '../ui/SkeletonOverlay';
 import {
   deriveInitialCameraState,
   reduceCameraScreenState,
 } from './cameraState';
+import {
+  createInitialLiveAnalysisSnapshot,
+  processLiveObservation,
+  type LiveAnalysisSnapshot,
+} from './analysisPipeline';
+import {
+  isTrackableObservation,
+  shouldAdvanceAnalysis,
+  shouldAttemptTrackingReacquisition,
+  shouldEnterManualFallbackFromProviderMessage,
+  shouldKeepNativeCameraActive,
+} from './cameraRuntime';
 
 type CameraPreviewScreenProps = {
   title: string;
@@ -45,6 +63,9 @@ export function CameraPreviewScreen({
   );
   const [lastObservation, setLastObservation] =
     useState<PoseObservation | null>(null);
+  const [analysis, setAnalysis] = useState<LiveAnalysisSnapshot>(
+    createInitialLiveAnalysisSnapshot(),
+  );
   const [overlayEnabled, setOverlayEnabled] = useState(true);
 
   useEffect(() => {
@@ -64,11 +85,8 @@ export function CameraPreviewScreen({
     const subscription = AppState.addEventListener(
       'change',
       (nextState: AppStateStatus) => {
-        if (nextState !== 'active' && state.lifecycle === 'preview_active') {
-          dispatch({
-            type: 'camera_interrupted',
-            reason: 'backgrounded',
-          });
+        if (nextState !== 'active' && state.lifecycle === 'ACTIVE') {
+          dispatch({ type: 'pause_requested' });
         }
       },
     );
@@ -78,10 +96,21 @@ export function CameraPreviewScreen({
     };
   }, [state.lifecycle]);
 
+  useEffect(() => {
+    if (
+      state.lifecycle === 'MANUAL_FALLBACK' ||
+      state.lifecycle === 'SET_COMPLETE' ||
+      state.lifecycle === 'ERROR'
+    ) {
+      setAnalysis(createInitialLiveAnalysisSnapshot());
+    }
+  }, [state.lifecycle]);
+
   const showPermissionButton =
     state.permission !== 'granted' && state.canRequestPermission;
 
-  const showPreview = state.lifecycle === 'preview_active';
+  const showPreview = shouldKeepNativeCameraActive(state.lifecycle);
+  const nativeCameraActive = shouldKeepNativeCameraActive(state.lifecycle);
 
   const primaryAction = useMemo(() => {
     if (showPermissionButton) {
@@ -94,38 +123,77 @@ export function CameraPreviewScreen({
       };
     }
 
-    if (state.lifecycle === 'ready_to_setup') {
-      return {
-        label: 'Start Camera',
-        onPress: () => {
-          dispatch({ type: 'start_preview' });
-        },
-      };
-    }
-
-    if (state.lifecycle === 'preview_interrupted') {
-      return {
-        label: 'Resume Camera Preview',
-        onPress: () => {
-          dispatch({ type: 'start_preview' });
-        },
-      };
-    }
-
-    if (state.lifecycle === 'manual_fallback' && state.permission === 'granted') {
-      return {
-        label: 'Return To Camera Setup',
-        onPress: () => {
-          dispatch({
-            type: 'permission_snapshot',
-            snapshot: {
-              isLoading: false,
-              granted: true,
-              canAskAgain: permission?.canAskAgain ?? false,
+    switch (state.lifecycle) {
+      case 'READY_TO_SETUP':
+        return {
+          label: 'Start Camera Setup',
+          onPress: () => {
+            dispatch({ type: 'start_setup' });
+          },
+        };
+      case 'POSITIONING':
+        return {
+          label: 'Validate Positioning',
+          onPress: () => {
+            dispatch({ type: 'setup_quality_eligible' });
+          },
+        };
+      case 'CALIBRATING':
+        return {
+          label: 'Finish Calibration',
+          onPress: () => {
+            dispatch({ type: 'calibration_passed' });
+          },
+        };
+      case 'READY':
+        return {
+          label: 'Start Countdown',
+          onPress: () => {
+            dispatch({ type: 'start_countdown' });
+          },
+        };
+      case 'COUNTDOWN':
+        return {
+          label: 'Enter Active Set',
+          onPress: () => {
+            dispatch({ type: 'countdown_completed' });
+          },
+        };
+      case 'ACTIVE':
+      case 'TRACKING_LOST':
+      case 'PAUSED':
+        return {
+          label: 'End Set',
+          onPress: () => {
+            dispatch({ type: 'set_completed' });
+          },
+        };
+      case 'ERROR':
+        return {
+          label: 'Retry Setup',
+          onPress: () => {
+            dispatch({ type: 'retry_setup' });
+          },
+        };
+      case 'MANUAL_FALLBACK':
+        if (state.permission === 'granted') {
+          return {
+            label: 'Return To Setup',
+            onPress: () => {
+              dispatch({
+                type: 'permission_snapshot',
+                snapshot: {
+                  isLoading: false,
+                  granted: true,
+                  canAskAgain: permission?.canAskAgain ?? false,
+                },
+              });
             },
-          });
-        },
-      };
+          };
+        }
+        break;
+      default:
+        break;
     }
 
     return {
@@ -134,7 +202,13 @@ export function CameraPreviewScreen({
         dispatch({ type: 'enter_manual_fallback' });
       },
     };
-  }, [permission?.canAskAgain, requestPermission, showPermissionButton, state.lifecycle, state.permission]);
+  }, [
+    permission?.canAskAgain,
+    requestPermission,
+    showPermissionButton,
+    state.lifecycle,
+    state.permission,
+  ]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -143,11 +217,12 @@ export function CameraPreviewScreen({
         <Text style={styles.body}>{subtitle}</Text>
         <Text style={styles.status}>{state.statusMessage}</Text>
         <Text style={styles.providerDetail}>
-          Lifecycle: {state.lifecycle} · Permission: {state.permission} · Can
-          request: {state.canRequestPermission ? 'yes' : 'no'}
+          Lifecycle: {state.lifecycle} · Cause: {state.cause} · Permission:{' '}
+          {state.permission}
         </Text>
         <Text style={styles.providerDetail}>
-          Snapshot: granted={permission?.granted ? 'true' : 'false'} · canAskAgain=
+          Snapshot: granted={permission?.granted ? 'true' : 'false'} ·
+          canAskAgain=
           {permission?.canAskAgain ? 'true' : 'false'}
         </Text>
         <View style={styles.toggleRow}>
@@ -173,13 +248,15 @@ export function CameraPreviewScreen({
           Without: {providerStatus.health.observationsWithoutLandmarks}
         </Text>
         <Text style={styles.providerDetail}>
-          Last sequence: {providerStatus.health.lastSequence} · Last frame:{' '}
-          {providerStatus.health.lastFrameId} · Last ts:{' '}
-          {providerStatus.health.lastTimestampMs}
+          Phase: {analysis.phaseState?.phase ?? 'n/a'} · Completed reps:{' '}
+          {analysis.repState.completedReps.length} · Incomplete reps:{' '}
+          {analysis.repState.incompleteReps.length}
         </Text>
         <Text style={styles.providerDetail}>
-          Inference: {providerStatus.health.lastInferenceMs}ms · Errors:{' '}
-          {providerStatus.health.providerErrors}
+          Feedback: {analysis.feedback?.key ?? 'none'} · Faults:{' '}
+          {analysis.faults
+            .map((fault) => `${fault.code}:${fault.status}`)
+            .join(', ') || 'none'}
         </Text>
         {providerStatus.lastError ? (
           <Text style={styles.providerError}>{providerStatus.lastError}</Text>
@@ -195,23 +272,109 @@ export function CameraPreviewScreen({
 
       <View style={styles.previewShell}>
         <PoseCameraView
-          active={state.permission === 'granted'}
+          active={nativeCameraActive}
           delegate="CPU"
           facing="back"
           mirrored={false}
-          modelAssetPath="pose_landmarker_lite.task"
+          modelAssetPath={DEFAULT_POSE_MODEL_ASSET_PATH}
           style={styles.preview}
           onProviderStatus={(event) => {
-            setProviderStatus(event.nativeEvent);
+            const nextStatus = event.nativeEvent;
+            setProviderStatus(nextStatus);
+
+            if (
+              shouldEnterManualFallbackFromProviderMessage(nextStatus.lastError)
+            ) {
+              dispatch({
+                type: 'enter_manual_fallback',
+                cause: 'manual_fallback_required',
+              });
+              return;
+            }
+
+            if (
+              state.lifecycle === 'POSITIONING' &&
+              nextStatus.health.observationsWithLandmarks > 0
+            ) {
+              dispatch({ type: 'setup_quality_eligible' });
+            }
+
+            if (
+              state.lifecycle === 'CALIBRATING' &&
+              nextStatus.health.observationsWithLandmarks > 0
+            ) {
+              dispatch({ type: 'calibration_passed' });
+            }
           }}
           onPoseObservation={(event) => {
-            setLastObservation(event.nativeEvent);
+            try {
+              const observation = adaptNativePoseObservation(
+                event.nativeEvent as never,
+              );
+              const validation = validatePoseObservation(observation);
+              if (!validation.valid) {
+                dispatch({ type: 'tracking_lost' });
+                setProviderStatus((current) => ({
+                  ...current,
+                  lastError: `Invalid PoseObservation: ${validation.errors.join('; ')}`,
+                }));
+                return;
+              }
+
+              setLastObservation(observation);
+
+              if (
+                state.lifecycle === 'COUNTDOWN' &&
+                !isTrackableObservation(observation)
+              ) {
+                dispatch({ type: 'countdown_quality_lost' });
+                return;
+              }
+
+              if (shouldAdvanceAnalysis(state.lifecycle)) {
+                const nextAnalysis = processLiveObservation(
+                  analysis,
+                  observation,
+                );
+                setAnalysis(nextAnalysis);
+
+                if (nextAnalysis.phaseState?.phase === 'TRACKING_LOST') {
+                  dispatch({ type: 'tracking_lost' });
+                }
+                return;
+              }
+
+              if (shouldAttemptTrackingReacquisition(state.lifecycle)) {
+                const nextAnalysis = processLiveObservation(
+                  analysis,
+                  observation,
+                );
+                setAnalysis(nextAnalysis);
+                if (nextAnalysis.phaseState?.phase !== 'TRACKING_LOST') {
+                  dispatch({ type: 'tracking_reacquired' });
+                }
+              }
+            } catch (error) {
+              setProviderStatus((current) => ({
+                ...current,
+                lastError:
+                  error instanceof Error
+                    ? error.message
+                    : 'Pose observation adaptation failed',
+              }));
+              dispatch({
+                type: 'enter_manual_fallback',
+                cause: 'manual_fallback_required',
+              });
+            }
           }}
           onProviderError={(event) => {
+            const message = event.nativeEvent.message;
             setProviderStatus((current) => ({
               ...current,
-              lastError: event.nativeEvent.message,
+              lastError: message,
             }));
+            dispatch({ type: 'technical_error' });
           }}
         />
         <SkeletonOverlay
@@ -224,8 +387,11 @@ export function CameraPreviewScreen({
           <View style={styles.previewOverlay}>
             <Text style={styles.placeholderTitle}>Camera preview inactive</Text>
             <Text style={styles.placeholderBody}>
-              M0-C wires a native pose provider boundary, provider metadata, and
-              health status into the existing preview shell.
+              R2 keeps the native camera bounded to the explicit lifecycle and
+              only advances analysis while ACTIVE.
+            </Text>
+            <Text style={styles.placeholderBody}>
+              Expected model: {DEFAULT_POSE_MODEL_VERSION}
             </Text>
           </View>
         ) : null}

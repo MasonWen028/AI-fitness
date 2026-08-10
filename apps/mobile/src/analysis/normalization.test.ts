@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LandmarkName, PoseObservation } from '../pose/poseContract';
+import type { LandmarkName } from '../pose/poseContract';
 import { SQUAT_CRITICAL_LANDMARKS } from '../pose/poseContract';
 import { createSyntheticObservation } from '../pose/poseValidation';
 import {
@@ -14,8 +14,18 @@ import {
 } from './normalization';
 
 function makeLandmarks(
-  overrides: Partial<Record<LandmarkName, { x: number; y: number; z?: number; visibility?: number }>>,
-): Partial<Record<LandmarkName, { x: number; y: number; z?: number; visibility?: number }>> {
+  overrides: Partial<
+    Record<
+      LandmarkName,
+      { x: number; y: number; z?: number; visibility?: number }
+    >
+  >,
+): Partial<
+  Record<
+    LandmarkName,
+    { x: number; y: number; z?: number; visibility?: number }
+  >
+> {
   return overrides;
 }
 
@@ -71,10 +81,14 @@ describe('normalizeObservation', () => {
   });
 
   it('handles mirrored coordinates', () => {
-    const obs = createSyntheticObservation(1, {
-      left_hip: { x: 0.4, y: 0.6, visibility: 0.9 },
-      right_hip: { x: 0.6, y: 0.6, visibility: 0.9 },
-    }, { mirrored: true });
+    const obs = createSyntheticObservation(
+      1,
+      {
+        left_hip: { x: 0.4, y: 0.6, visibility: 0.9 },
+        right_hip: { x: 0.6, y: 0.6, visibility: 0.9 },
+      },
+      { mirrored: true },
+    );
 
     const frame = normalizeObservation(obs);
     expect(frame).not.toBeNull();
@@ -87,11 +101,15 @@ describe('normalizeObservation', () => {
   });
 
   it('handles 90-degree rotation', () => {
-    const obs = createSyntheticObservation(1, {
-      left_hip: { x: 0.3, y: 0.6, visibility: 0.9 },
-      right_hip: { x: 0.7, y: 0.6, visibility: 0.9 },
-      nose: { x: 0.5, y: 0.2, visibility: 0.9 },
-    }, { rotationDegrees: 90 });
+    const obs = createSyntheticObservation(
+      1,
+      {
+        left_hip: { x: 0.3, y: 0.6, visibility: 0.9 },
+        right_hip: { x: 0.7, y: 0.6, visibility: 0.9 },
+        nose: { x: 0.5, y: 0.2, visibility: 0.9 },
+      },
+      { rotationDegrees: 90 },
+    );
 
     const frame = normalizeObservation(obs);
     expect(frame).not.toBeNull();
@@ -99,6 +117,25 @@ describe('normalizeObservation', () => {
     const nose = getNormalizedLandmark(frame!, 'nose')!;
     const dist = Math.sqrt(nose.x * nose.x + nose.y * nose.y);
     expect(dist).toBeGreaterThan(0.5);
+  });
+
+  it('clamps NaN and Infinity coordinates into safe finite values', () => {
+    const obs = createSyntheticObservation(1, {
+      left_hip: { x: Number.NaN, y: Number.POSITIVE_INFINITY, visibility: 0.9 },
+      right_hip: { x: 0.6, y: 0.6, visibility: 0.9 },
+      nose: { x: Number.NEGATIVE_INFINITY, y: 0.2, visibility: 0.9 },
+    });
+
+    const frame = normalizeObservation(obs);
+    expect(frame).not.toBeNull();
+
+    for (const landmark of frame!.landmarks.values()) {
+      expect(Number.isFinite(landmark.x)).toBe(true);
+      expect(Number.isFinite(landmark.y)).toBe(true);
+      expect(Number.isFinite(landmark.z)).toBe(true);
+      expect(Number.isFinite(landmark.visibility)).toBe(true);
+      expect(Number.isFinite(landmark.presence)).toBe(true);
+    }
   });
 
   it('preserves sequence and frameId', () => {
@@ -118,7 +155,12 @@ describe('normalizeObservation', () => {
     const frame = normalizeObservation(obs);
     expect(frame).not.toBeNull();
 
-    for (const name of ['left_hip', 'right_hip', 'left_knee', 'right_knee'] as const) {
+    for (const name of [
+      'left_hip',
+      'right_hip',
+      'left_knee',
+      'right_knee',
+    ] as const) {
       const lm = getNormalizedLandmark(frame!, name)!;
       expect(lm.x).toBeGreaterThanOrEqual(-5);
       expect(lm.x).toBeLessThanOrEqual(5);
@@ -149,11 +191,13 @@ describe('assessQuality', () => {
   });
 
   it('detects low visibility landmarks', () => {
-    const allLandmarks: Partial<Record<LandmarkName, { x: number; y: number; visibility?: number }>> = {};
+    const allLandmarks: Partial<
+      Record<LandmarkName, { x: number; y: number; visibility?: number }>
+    > = {};
     for (const name of SQUAT_CRITICAL_LANDMARKS) {
       allLandmarks[name] = { x: 0.5, y: 0.5, visibility: 0.8 };
     }
-    allLandmarks['left_knee'] = { x: 0.4, y: 0.7, visibility: 0.2 };
+    allLandmarks.left_knee = { x: 0.4, y: 0.7, visibility: 0.2 };
 
     const obs = createSyntheticObservation(1, allLandmarks);
     const quality = assessQuality(obs, 0, 0.5);
@@ -162,7 +206,9 @@ describe('assessQuality', () => {
   });
 
   it('reports high quality when all critical landmarks present', () => {
-    const allLandmarks: Partial<Record<LandmarkName, { x: number; y: number; visibility?: number }>> = {};
+    const allLandmarks: Partial<
+      Record<LandmarkName, { x: number; y: number; visibility?: number }>
+    > = {};
     for (const name of SQUAT_CRITICAL_LANDMARKS) {
       allLandmarks[name] = { x: 0.5, y: 0.5, visibility: 0.9 };
     }
@@ -232,7 +278,11 @@ describe('getNormalizedLandmarks', () => {
       left_knee: { x: 0.4, y: 0.8, visibility: 0.9 },
     });
     const frame = normalizeObservation(obs)!;
-    const result = getNormalizedLandmarks(frame, ['left_hip', 'left_knee', 'nose']);
+    const result = getNormalizedLandmarks(frame, [
+      'left_hip',
+      'left_knee',
+      'nose',
+    ]);
     expect(result).toHaveLength(3);
     expect(result[0]!.point).toBeDefined();
     expect(result[1]!.point).toBeDefined();
